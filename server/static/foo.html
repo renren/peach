@@ -22,26 +22,20 @@
 		<script type="text/javascript">
 		  var ac_index = 0;
 		  function nextColor() {
-		    var ac = ['333333', '993300', '339999', '9933CC', '99CC66', '0066CC', 'CC3333', 'CCFFFF', 'FF3333',
-        'CC99FF', 'FF9900', 'CCFF33', 'CC33FF', '666699', '00FF66', '339933', '006633', '9966CC', '66CCCC',
-        'FFCC33', '99FF33', 'FF9966', 'FF6633', 'CC9933', '666633', '0033FF', 'FF0066', '003399', '996600',
-        '006666', '996666', 'CC00FF', '99FFFF', '33FF00', '33CCCC', '660099', 'CC0066', 'CC6666', '3300FF',
-        '9966FF', '333300', 'CCCCFF', '6600FF', '0099FF', '3366CC', '003366', '663333', '00CC00', 'FF99CC',
-        'CC0099', '66CC33', '3300CC', 'CC3300', '666666', '669966', '99FFCC', '333366', '003300', 'FF0000',
-        'CC00CC', '99CC33', '339900', '3333FF', '33FF66', '006600', 'FF00CC', '330099', 'CCCC99', 'FFCCFF',
-        'FF66FF', 'FFCC99', '663399', 'FF6666', '339966', 'CC9900', '99CC00', '33CC99', 'CC6633', 'FFCC66',
-        '999999', '336600', '00CC33', 'CCCC00', 'CC3366', 'CC33CC', '00CC99', 'FF9999', '99CCCC', '009900',
-        '669900', 'FF9933', '33CC33', '993333', '66CC66', 'CC0033', '009933', '00FF99', 'FF3399', '663366',
-        '33CC66', '0099CC', '3399CC', '330000', '663300', '333399', 'FF3366', '666600', '999933', '9999FF',
-        '6666CC', '996699', '3366FF', '33FF33', '99FF66', 'CCFF00', 'CC6699', 'FF99FF', '669999', 'CC99CC',
-        'CCCC33', '00FF00', '6633FF', '6699CC', '6666FF', '996633', 'FF6699', '99CCFF', 'CC66CC', '660066',
-        '336666', '66CCFF', 'CC9966', '00CCFF', '66CC99', 'CCCC66', '009999', '336633', '6600CC', '660000',
-        'FF33CC', '009966', '33FFCC', '33FF99', 'FF0099', '336699', 'CC9999', '993366', 'FF6600', '99FF99',
-        '6633CC', '00FFFF', '669933', 'CC0000', 'CCCCCC', 'CC66FF', '3333CC', '9933FF', '99FF00', 'CC3399',
-        '330066', '66CC00', 'CC6600', '33CC00', '006699', 'CCFFCC', '33FFFF', '9999CC', '00FFCC', 'FFCC00',
-        '00FF33', '003333', '00CC66', 'CCFF66', 'FF3300', '6699FF', '330033', '660033', '993399', '999966',
-        '99CC99', 'CCFF99', 'FF33FF', 'FFCCCC', '00CCCC', '3399FF', '999900', 'FF00FF', '33CCFF', 'FF66CC', 
-        '0066FF', 'FF0033', '0033CC'];
+		    var ac = ['#fafad2', '#ffe4c4', '#00fa9a', '#daa520', '#afeeee', '#7fffd4', '#2f4f4f', '#006400', '#ff6347', '#f0f8ff',
+        'fff5ee', '#ffe4b5', '#d2691e', '#fff8dc', '#00ff7f', '#da70d6', '#e0ffff', '#8b008b', '#a9a9a9', '#ffdead', '#778899',
+        'b22222', '#008080', '#f4a460', '#dda0dd', '#191970', '#f08080', '#0000ff', '#fa8072', '#fffacd', '#ff00ff', '#9acd32',
+        '87cefa', '#d3d3d3', '#8b4513', '#800080', '#f5f5dc', '#000080', '#b0e0e6', '#00ffff', '#ffebcd', '#b8860b', '#faf0e6',
+        'f8f8ff', '#8fbc8f', '#00ced1', '#cd853f', '#e6e6fa', '#66cdaa', '#a52a2a', '#ffdab9', '#00bfff', '#f5deb3', '#32cd32',
+        'fffff0', '#90ee90', '#f0fff0', '#ffff00', '#00008b', '#ffffe0', '#a0522d', '#ff1493', '#ffa500', '#c0c0c0', '#800000',
+        'ee82ee', '#9370db', '#d8bfd8', '#cd5c5c', '#2e8b57', '#696969', '#ffe4e1', '#483d8b', '#00ffff', '#d2b48c', '#00ff00',
+        'ffefd5', '#fdf5e6', '#ffa07a', '#40e0d0', '#e9967a', '#ff4500', '#556b2f', '#fffafa', '#808000', '#bc8f8f', '#0000cd',
+        'ff0000', '#7b68ee', '#6a5acd', '#f5f5f5', '#808080', '#9400d3', '#f5fffa', '#fff0f5', '#778899', '#f0e68c',
+        'b0c4de', '#add8e6', '#98fb98', '#6b8e23', '#4682b4', '#ffb6c1', '#4b0082', '#9932cc', '#8b0000', '#87ceeb', '#f0ffff',
+        '696969', '#7cfc00', '#5f9ea0', '#6495ed', '#ff00ff', '#8a2be2', '#008000', '#adff2f', '#20b2aa', '#ffd700',
+        '2f4f4f', '#dc143c', '#a9a9a9', '#48d1cc', '#3cb371', '#db7093', '#ffc0cb', '#708090', '#ff8c00', '#eee8aa', '#bdb76b',
+        'fffaf0', '#7fff00', '#4169e1', '#deb887', '#faebd7', '#1e90ff', '#c71585', '#dcdcdc', '#ff7f50', '#d3d3d3', '#ff69b4', 
+        '708090', '#228b22', '#008b8b', '#808080', '#ba55d3'];
 		    return ac[ac_index++ % ac.length];
       }
 
@@ -169,17 +163,19 @@ credits: {
           });
         }
 		  }
-      		  
+		  var stop = false;
 		  function pull() {
 		    $.getJSON('/pull/br', function (data) {
 		      tree(data, '');
-          chart.redraw();
-		      setTimeout(pull, 1);
+		      chart.redraw();
+          if (!stop)
+		        setTimeout(pull, 1);
         });
       }
       function foo() {
-        add('foo', 4);
-        add('bar', 3);
+        stop = !stop;
+        if (!stop)
+          pull();
       }
 		</script>
 		
@@ -188,6 +184,6 @@ credits: {
 		
 		<!-- 3. Add the container -->
 		<div id="container" style="width: 600px; height: 400px; margin: 0 auto"></div>
-		<button onclick="foo()"></button>
+		<a onclick="foo()" href="#">stop</a>
 	</body>
 </html>

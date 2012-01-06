@@ -3,9 +3,19 @@ A: An animal, just pick from film of Ice Age.
 
 tree
 ====
-cpu-- idle -- {count:32}
-      sytem -- {count:29}
-      user--{count:900, marker:text}
+cpu-- 10.3.1.12-- idle--  {count:32}
+                  sytem-- {count:29}
+                  user--  {count:900, marker:'sth. wrong happened'}
+
+br--  ie--  6-- {count: 3}
+            7-- {count: 8}
+            7-- venders-- sogou-- {count 1}
+      webkit--  chrome--  14.0--  {count: 40}
+                          13.0--  {count: 20}
+
+
+br,,chrome
+br,ie,6
 
 
 
@@ -14,6 +24,7 @@ directory layout
 # agent
 agent/
 agent/modules/*.py *.so
+  support ganglia module
 agent/conf/*.conf *.on *.off
 agent/agent.conf
 
@@ -103,6 +114,9 @@ url(time to first byte, status code, bytes, ...)
 
 ? python modules/*.py --check --test ....
 
+write your own module(same as ganglia module):
+  def metric_init({})
+  def metric_cleanup()
 
 
 pipes
@@ -117,10 +131,24 @@ web access log
   error count
   ? geo
 
+write your own pipe.py
+  def init()
+  def process(arr)
+  def cleanup()
 
-# interval
+running mode:
+init:
+  for m in pipes/*.py:
+    pipes.push(m)
+    m.init()
+
+run:
+  for line in log.read():
+    arr = weblog.parse(line)
+    for m in pipes:
+      m.process(arr)
+
+interval
+========
 agent push
 pipe process
-
- m = import pipes.ua
- m.init()
