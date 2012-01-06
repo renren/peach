@@ -1,17 +1,99 @@
 Q: Why named sloth?
-A: an animal, just pick from movie Ice Age.
+A: An animal, just pick from film of Ice Age.
+
+tree
+====
+cpu-user-{count:900, marker:text}
 
 
-directory layout:
-#
+
+directory layout
+================
+# agent
 agent/
-agent/modules
+agent/modules/*.py *.so
+agent/conf/*.conf *.on *.off
+agent/agent.conf
 
-# 
+
+
+# server
 server/
-server/pipes
-server/static
-server/templates
+server/pipes/*.py
+server/web
+server/web/static/*.js *.css *.html
+server/web/templates/*.html
+server/graph
+server/graph/styles.py
+  cpu|net|url|default
+  input: tree
+    bar|line|x-axis|marker range,picture|theme...|format
+  output: png|pdf
+
+
+# relay server
+--relay
+? agent/conf/relay.conf
+
+
+url map
+=======
+/push
+  form field support json/accesslog
+  json => merge into core tree
+  accesslog => pipes => tree => merge into core tree
+
+/pull/?key=br
+/pull/?key=br,ie
+/pull/?key=br,ie,7
+  comet, repsonse in json list
+    [{br,ie,7 : 2328},
+    {br,ie,sogou,3 : 323}]
+/get/?key=br,ie,7
+  response immediatly in json list
+/realtime/view/name
+  view by name, per user's specify
+
+/trend/view/
+  left tree | right js graph (zoomable highcharts/examples/dynamic-master-detail.htm)
+/trend/view/name
+
+/graph
 
 
 
+
+server push
+===========
+udp
+tcp
+http post in form
+
+socket
+======
+
+
+
+modules
+=======
+web access log(raw)
+nginx stats
+network traffic(bytes, same as gangalia)
+url(time to first byte, status code, bytes, ...)
+? cpu/load
+
+? python modules/*.py --check --test ....
+
+
+
+pipes
+======
+web access log
+  browser type  => tree
+  os type       => tree
+  upstream time  => tree
+  request time
+  response bytes
+  url count
+  error count
+  ? geo
