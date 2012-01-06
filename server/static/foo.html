@@ -20,7 +20,30 @@
 		
 		<!-- 2. Add the JavaScript to initialize the chart on document ready -->
 		<script type="text/javascript">
-
+		  var ac_index = 0;
+		  function nextColor() {
+		    var ac = ['333333', '993300', '339999', '9933CC', '99CC66', '0066CC', 'CC3333', 'CCFFFF', 'FF3333',
+        'CC99FF', 'FF9900', 'CCFF33', 'CC33FF', '666699', '00FF66', '339933', '006633', '9966CC', '66CCCC',
+        'FFCC33', '99FF33', 'FF9966', 'FF6633', 'CC9933', '666633', '0033FF', 'FF0066', '003399', '996600',
+        '006666', '996666', 'CC00FF', '99FFFF', '33FF00', '33CCCC', '660099', 'CC0066', 'CC6666', '3300FF',
+        '9966FF', '333300', 'CCCCFF', '6600FF', '0099FF', '3366CC', '003366', '663333', '00CC00', 'FF99CC',
+        'CC0099', '66CC33', '3300CC', 'CC3300', '666666', '669966', '99FFCC', '333366', '003300', 'FF0000',
+        'CC00CC', '99CC33', '339900', '3333FF', '33FF66', '006600', 'FF00CC', '330099', 'CCCC99', 'FFCCFF',
+        'FF66FF', 'FFCC99', '663399', 'FF6666', '339966', 'CC9900', '99CC00', '33CC99', 'CC6633', 'FFCC66',
+        '999999', '336600', '00CC33', 'CCCC00', 'CC3366', 'CC33CC', '00CC99', 'FF9999', '99CCCC', '009900',
+        '669900', 'FF9933', '33CC33', '993333', '66CC66', 'CC0033', '009933', '00FF99', 'FF3399', '663366',
+        '33CC66', '0099CC', '3399CC', '330000', '663300', '333399', 'FF3366', '666600', '999933', '9999FF',
+        '6666CC', '996699', '3366FF', '33FF33', '99FF66', 'CCFF00', 'CC6699', 'FF99FF', '669999', 'CC99CC',
+        'CCCC33', '00FF00', '6633FF', '6699CC', '6666FF', '996633', 'FF6699', '99CCFF', 'CC66CC', '660066',
+        '336666', '66CCFF', 'CC9966', '00CCFF', '66CC99', 'CCCC66', '009999', '336633', '6600CC', '660000',
+        'FF33CC', '009966', '33FFCC', '33FF99', 'FF0099', '336699', 'CC9999', '993366', 'FF6600', '99FF99',
+        '6633CC', '00FFFF', '669933', 'CC0000', 'CCCCCC', 'CC66FF', '3333CC', '9933FF', '99FF00', 'CC3399',
+        '330066', '66CC00', 'CC6600', '33CC00', '006699', 'CCFFCC', '33FFFF', '9999CC', '00FFCC', 'FFCC00',
+        '00FF33', '003333', '00CC66', 'CCFF66', 'FF3300', '6699FF', '330033', '660033', '993399', '999966',
+        '99CC99', 'CCFF99', 'FF33FF', 'FFCCCC', '00CCCC', '3399FF', '999900', 'FF00FF', '33CCFF', 'FF66CC', 
+        '0066FF', 'FF0033', '0033CC'];
+		    return ac[ac_index++ % ac.length];
+      }
 
 		  Highcharts.setOptions({
 		    global: {
@@ -34,7 +57,7 @@
 		      chart: {
 		        renderTo: 'container',
 		        defaultSeriesType: 'spline',
-		        marginRight: 10,
+		        marginRight: 0,
 		        events: {
 		          load: function () {
 		            return;
@@ -48,13 +71,28 @@
 		          }
 		        }
 		      },
+credits: {
+		enabled: true,
+		text: 'renren.som',
+		href: 'http://www.highcharts.com',
+		position: {
+			align: 'left',
+			x: 0,
+			verticalAlign: 'bottom',
+			y: -5
+		},
+		style: {
+			cursor: 'pointer',
+			color: '#909090',
+			fontSize: '10px'
+		}
+	},
 		      title: {
-		        text: 'Live random data'
+		        text: 'Browser of Webkit System'
 		      },
 		      xAxis: {
 		        type: 'datetime',
-		        // tickPixelInterval: 150
-		      },
+		        tickPixelInterval: 50},
 		      yAxis: {
 		        title: {
 		          text: 'Value'
@@ -65,6 +103,14 @@
 		          color: '#808080'
 		        }]
 		      },
+          plotOptions: {
+						line: {
+							dataLabels: {
+								enabled: true
+							},
+              enableMouseTracking: false
+              }
+          },
 		      tooltip: {
 		        formatter: function () {
 		          return '<b>' + this.series.name + '</b><br/>' +
@@ -73,7 +119,8 @@
 		        }
 		      },
 		      legend: {
-		        enabled: false
+		        enabled: true,
+            borderWidth:0
 		      },
 		      exporting: {
 		        enabled: false
@@ -93,29 +140,24 @@
       }
 		  function add(name, val) {
 		    var s = findSeries(name);
-        var data = [],
-				  time = (new Date()).getTime(),
-				  i;
-		    for (i = -19; i <= 0; i++) {
-		      data.push({
-		        x: time + i * 1000,
-		        y: 0
-		      });
-		    }
+        var data = [];
 
 		    if (!s) {
 		      chart.addSeries({
             name: name,
             data: data,
-            // color: 'red'
-          });
+            color: nextColor()});
           s = findSeries(name);
         }
+
+        var shift = true;
+        if (s.data.length<10)
+          shift = false;
         
         // console.log('find', s.name, s);
 		    var x = (new Date()).getTime(), // current time
             y = val;
-		    s.addPoint([x, y], true, true);
+		    s.addPoint([x, y], false, shift);
 		  }
 
 		  function tree(o, name) {
@@ -124,7 +166,6 @@
         else {
           $.each(o, function (key, val) {
             tree(val, name + '/' + key);
-            return; // TODO:
           });
         }
 		  }
@@ -132,6 +173,7 @@
 		  function pull() {
 		    $.getJSON('/pull/br', function (data) {
 		      tree(data, '');
+          chart.redraw();
 		      setTimeout(pull, 1);
         });
       }

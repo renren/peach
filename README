@@ -1,6 +1,17 @@
 Q: Why named sloth?
-A: From Ice Age.
+A: an animal, just pick from movie Ice Age.
 
+
+directory layout:
+#
+agent/
+agent/modules
+
+# 
+server/
+server/pipes
+server/static
+server/templates
 
 
 
