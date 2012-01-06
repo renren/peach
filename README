@@ -7,6 +7,12 @@ cpu-- 10.3.1.12-- idle--  {count:32}
                   sytem-- {count:29}
                   user--  {count:900, marker:'sth. wrong happened'}
 
+{'cpu': {'10.3.1.12': {'idle': {'count': 32},
+                       'sytem': {'count': 29},
+                       'user': {'count': 900,
+                                'marker': 'sth. wrong happened'}}},
+ 'defaultaction': 'average'}
+
 br--  ie--  6-- {count: 3}
             7-- {count: 8}
             7-- venders-- sogou-- {count 1}
