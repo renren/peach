@@ -3,7 +3,9 @@ A: An animal, just pick from film of Ice Age.
 
 tree
 ====
-cpu-user-{count:900, marker:text}
+cpu-- idle -- {count:32}
+      sytem -- {count:29}
+      user--{count:900, marker:text}
 
 
 
@@ -15,12 +17,23 @@ agent/modules/*.py *.so
 agent/conf/*.conf *.on *.off
 agent/agent.conf
 
+setup.py
+easy_install | pip install 
+big [egg|zip] with pip and dependence packages ...
 
 
 # server
 server/
+  main.py
+  tree.py => async store in trend db
+  treedb.py
+  pushviahttp.py
+  pushviasocket.py
+  
 server/pipes/*.py
 server/web
+  web/pages.py
+  web/trend.py
 server/web/static/*.js *.css *.html
 server/web/templates/*.html
 server/graph
@@ -54,10 +67,16 @@ url map
 /realtime/view/name
   view by name, per user's specify
 
-/trend/view/
-  left tree | right js graph (zoomable highcharts/examples/dynamic-master-detail.htm)
-/trend/view/name
+/trend/view/ [default in one year]
+  left tree | right (multi) js graph (zoomable highcharts/examples/dynamic-master-detail.htm)
+/trend/view/name?
+  one js graph
+  add compare | zoomable | setting style ...
+/setting/view
+  add | remove view
 
+
+/diff/keya/keyb
 /graph
 
 
@@ -97,3 +116,11 @@ web access log
   url count
   error count
   ? geo
+
+
+# interval
+agent push
+pipe process
+
+ m = import pipes.ua
+ m.init()
