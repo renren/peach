@@ -2,11 +2,8 @@ Q: Why named sloth?
 A: An animal, just pick from film of Ice Age.  
   
 tree  
-====  
-cpu-- 10.3.1.12-- idle--  {count:32}  
-                  sytem-- {count:29}  
-                  user--  {count:900, marker:'sth. wrong happened'}  
-  
+----  
+<pre>
 {'cpu': {'10.3.1.12': {'idle': {'count': 32},  
                        'sytem': {'count': 29},  
                        'user': {'count': 900,  
@@ -18,7 +15,7 @@ br--  ie--  6-- {count: 3}
             7-- venders-- sogou-- {count 1}  
       webkit--  chrome--  14.0--  {count: 40}  
                           13.0--  {count: 20}  
-  
+</pre>  
   
 br,,chrome  
 br,ie,6  
@@ -33,16 +30,17 @@ agent/modules/*.py *.so
   support ganglia module  
 agent/conf/*.conf *.on *.off  
 agent/agent.conf  
-  
+
 setup.py  
 easy_install | pip install   
 big [egg|zip] with pip and dependence packages ...  
   
   
-# server  
+# server
+<pre>
 server/  
   main.py  
-  tree.py => async store in trend db  
+  tree.py -> async store in trend db  
   treedb.py  
   pushviahttp.py  
   pushviasocket.py  
@@ -64,22 +62,23 @@ server/graph/styles.py
 # relay server  
 --relay  
 ? agent/conf/relay.conf  
-  
+</pre>  
   
 url map
 =======
+<pre>
 /push  
   form field support json/accesslog  
-  json => merge into core tree  
-  accesslog => pipes => tree => merge into core tree  
+  json -> merge into core tree  
+  accesslog -> pipes -> tree -> merge into core tree  
   
-/pull/?key=br  
-/pull/?key=br,ie  
-/pull/?key=br,ie,7  
+/pull/?key-br  
+/pull/?key-br,ie  
+/pull/?key-br,ie,7  
   comet, repsonse in json list  
     [{br,ie,7 : 2328},  
     {br,ie,sogou,3 : 323}]  
-/get/?key=br,ie,7  
+/get/?key-br,ie,7  
   response immediatly in json list  
 /realtime/view/name  
   view by name, per user's specify  
@@ -95,23 +94,24 @@ url map
   
 /diff/keya/keyb  
 /graph  
-  
+</pre>
   
   
   
 server push
-===========
+-----------
 udp  
 tcp  
 http post in form  
   
 socket
-======
+------
   
   
   
 modules
-=======
+-------
+<pre>
 web access log(raw)  
 nginx stats  
   network traffic(bytes, same as gangalia)  
@@ -123,14 +123,14 @@ url(time to first byte, status code, bytes, ...)
 write your own module(same as ganglia module):  
   def metric_init({})  
   def metric_cleanup()  
-  
+</pre>
   
 pipes
-======
-web access log  
-  browser type  => tree  
-  os type       => tree  
-  upstream time  => tree  
+------
+<pre>web access log  
+  browser type  -> tree  
+  os type       -> tree  
+  upstream time  -> tree  
   request time  
   response bytes  
   url count  
@@ -150,11 +150,12 @@ init:
   
 run:  
   for line in log.read():  
-    arr = weblog.parse(line)  
+    arr - weblog.parse(line)  
     for m in pipes:  
       m.process(arr)  
+</pre>
   
 interval
-========
+--------
 agent push  
 pipe process  
