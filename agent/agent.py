@@ -48,7 +48,7 @@ class Agent():
         return tree
 
 def main():
-    push_once('http://10.2.76.28:8000/push')
+    push_once('http://127.0.0.1:8000/push')
 
 if __name__ == '__main__':
     # --push

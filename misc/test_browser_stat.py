@@ -5,7 +5,7 @@ import json, urllib2, urllib
 _br = {}
 
 def push(d):
-    url = 'http://10.2.76.28:8000/push'
+    url = 'http://127.0.0.1:8000/push'
     s = json.dumps(d)
     s = urllib.urlencode({"json": s})
     f = urllib2.urlopen(url, s)
@@ -33,7 +33,7 @@ for i in sys.stdin:
         v = k.split(':')
         add(d, (v[0], v[1]))
     last += 1
-    if last > 100:
+    if last > 1000:
         time.sleep(3)
         last = 1
         push({'br':_br})

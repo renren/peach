@@ -58,7 +58,7 @@ def main():
         (r"/pull/([^/]+)", PullHandler),
         (r".*", FallbackHandler, dict(fallback=WSGIContainer(app))),
         ], **settings)
-    application.listen(8000)
+    application.listen(8000, '127.0.0.1')
     io = IOLoop.instance()
 
     #io.add_timeout(
