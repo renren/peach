@@ -1,0 +1,6 @@
+REQUIREMENTS
+============
+* python
+** tornado
+** flask
+
