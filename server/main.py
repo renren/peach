@@ -33,8 +33,6 @@ class PullHandler(RequestHandler):
     def get(self, name):
         self._name = name
         app.waiters.add(name, self._on_fire)
-        #d = app.tree.find(name)
-        #if d: self.write(d)
 
     def on_connection_close(self):
         app.waiters.remove(self._name, self._on_fire)
@@ -49,7 +47,7 @@ def main():
             cookie_secret="43oETzKXQBGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
-            #xsrf_cookies=True,
+            xsrf_cookies=False,
             autoescape="xhtml_escape",
         )
 
