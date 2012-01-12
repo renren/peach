@@ -36,7 +36,7 @@ for i in sys.stdin:
     if last > 1000:
         time.sleep(3)
         last = 1
-        push({'br':_br})
+        push({'br':_br, 'default_action': 'average'})
         pprint.pprint(_br)
         _br = {}
 

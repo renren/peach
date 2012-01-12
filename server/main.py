@@ -32,10 +32,10 @@ class PullHandler(RequestHandler):
     @tornado.web.asynchronous
     def get(self, name):
         self._name = name
-        app.waiters.add(name, self._on_fire)
+        app.waiters.connect(name, self._on_fire)
 
     def on_connection_close(self):
-        app.waiters.remove(self._name, self._on_fire)
+        app.waiters.disconnect(self._name, self._on_fire)
 
     def _on_fire(self, value):
         self.write(value)
@@ -56,7 +56,7 @@ def main():
         (r"/pull/([^/]+)", PullHandler),
         (r".*", FallbackHandler, dict(fallback=WSGIContainer(app))),
         ], **settings)
-    application.listen(8000, '127.0.0.1')
+    application.listen(8000)
     io = IOLoop.instance()
 
     #io.add_timeout(

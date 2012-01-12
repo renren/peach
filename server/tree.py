@@ -1,6 +1,10 @@
 """
-Core of the entire system. Tree always initialize from a `dict`.
+This is the Core of the entire system. 
+
+Tree always initialize from a `dict`. Can be merge/find from dict.
 """
+
+import sys
 
 class Tree(object):
     """
@@ -51,13 +55,28 @@ class Item(object):
         return "<Item(%r)>" % repr(self.value)
 
     def __add__(self, b):
-        return Item(self.action(self.value, b.value), self.action)
+        # use b's action
+        return Item(b.action(self, b), b.action)
+
+#if sys.version_info.major > 2 or (sys.version_info.major == 2 and sys.version_info.minor > 5):
+    def __iadd__(self, b):
+        #print 'iadd', self.value, b.value, b.action(self, b)
+        self.value = b.action(self, b)
+        return self
 
 def _average(a,b):
-    return (a+b)/2
+    try:
+        getattr(a, 'sum')
+    except AttributeError:
+        setattr(a, 'sum', a.value)
+        setattr(a, 'count', 1)
+    a.sum += b.value
+    a.count += 1
+    return float(a.sum)/a.count
 
 def _add(a,b):
-    return a+b
+    #print 'add', a, b, a.value + b.value
+    return a.value + b.value
 
 def _action_from_name(name):
     m = {'add': _add,
@@ -88,7 +107,7 @@ def evolve(d, default_action=_add):
             rd[k] = evolve(v, default_action)
     return rd
 
-def merge(d1, d2):
+def merge(d1, d2, default_action=None):
     """
     >>> merge({1: Item(1,_add)}, {3: Item(1,_add)})
     {1: <Item('1')>, 3: <Item('1')>}
@@ -105,18 +124,31 @@ def merge(d1, d2):
 
     >>> merge({1:Item(4, _add)}, {1: {2: {3:5}}})
     {1: {'count': <Item('4')>, 2: {3: <Item('5')>}}}
+
+    >>> da = merge({1:{}}, {'default_action':'average',1: {2: {3:5}}})
+    >>> da
+    {1: {2: {3: <Item('5')>}}}
+    >>> da[1][2][3].action == _average
+    True
  
     """
-    d2 = evolve(d2)
+    if default_action is None:
+        if 'default_action' in d2:
+            default_action = _action_from_name(d2['default_action'])
+        else:
+            default_action = _add
+    d2 = evolve(d2, default_action)
+
     for k,v2 in d2.iteritems():
         if k not in d1:
             d1[k] = v2
         else:
             v1 = d1[k]
             if isinstance(v1, Item) and isinstance(v2, Item):
-                d1[k] = v1 + v2
+                #d1[k] = v1 + v2
+                v1 += v2
             elif isinstance(v1, dict) and isinstance(v2, dict):
-                d1[k] = merge(v1, v2)
+                d1[k] = merge(v1, v2, default_action)
             elif isinstance(v1, dict) and isinstance(v2, Item):
                 v1['count'] = v2
             elif isinstance(v1, Item) and isinstance(v2, dict):

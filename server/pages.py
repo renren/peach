@@ -5,47 +5,13 @@ from flask import Flask, request, render_template, url_for, redirect, Response, 
 from tornado import stack_context
 
 from tree import Tree, keyin
-
-
-class NotifyTable():
-    def __init__(self):
-        self._dict = {}
-
-    def add(self, name, callback):
-        cs = self._dict.setdefault(name, [])
-        # cs.append(callback)
-        cs.append(stack_context.wrap(callback))
-
-    def remove(self, name, callback):
-        cs = self._dict.get(name, None)
-        if cs:
-            # TODO: here wrong
-            print cs, callback
-            cs.remove(callback)
-
-    @property
-    def keys(self):
-        return self._dict.keys()
-
-    def fire(self, name, val):
-        try:
-            print 'fire', name
-            cs = self._dict.pop(name)
-        except:
-            # TODO: log
-            return
-        
-        for callback in cs:
-            try:
-                callback(val)
-            except:
-                continue
+import data
 
 app = Flask(__name__)
 
 app.debug = True
-app.tree = Tree()
-app.waiters = NotifyTable()
+app.tree = data.core_tree
+app.waiters = data.Dispatcher()
 
 
 """
@@ -73,11 +39,11 @@ def push():
 
         #
         if isinstance(d, dict):
-            for key in [key for key in app.waiters.keys if keyin(key, d)]:
+            for key in [key for key in app.waiters.live_signals if keyin(key, d)]:
                 fd = {}
                 for ks, x in app.tree.find(key):
                     fd[','.join(ks)] = x.value
-                app.waiters.fire(key, fd)
+                app.waiters.send(key, fd)
     else:
         pass
     return render_template('post.html')
