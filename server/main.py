@@ -25,8 +25,17 @@ import tornado.web
 from pages import app
 
 class MainHandler(RequestHandler):
-  def get(self):
-    self.write("This message comes from Tornado ^_^")
+    def get(self):
+        self.write("This message comes from Tornado ^_^")
+
+    def put(self):
+        print 'put body:', len(self.request.body), type(self.request)
+        f = self.request.connection.stream
+        f.read_bytes(10, self._readed)
+        self.write('')
+
+    def _readed(self, data):
+        print len(data)
 
 class PullHandler(RequestHandler):
     @tornado.web.asynchronous

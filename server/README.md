@@ -1,6 +1,6 @@
 REQUIREMENTS
 ============
-* python
-** tornado
-** flask
+# python(>=2.5)
+# tornado(or Nginx with comet
+# flask
 

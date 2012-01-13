@@ -2,7 +2,6 @@ import time
 import json # TODO: more efficient
 
 from flask import Flask, request, render_template, url_for, redirect, Response, jsonify
-from tornado import stack_context
 
 from tree import Tree, keyin
 import data
@@ -47,6 +46,14 @@ def push():
     else:
         pass
     return render_template('post.html')
+
+@app.route('/raw', methods=['POST', 'PUT', 'GET'])
+def raw():
+    print '/raw', request.want_form_data_parsed
+    # request.want_form_data_parsed = False    
+    f = request.stream
+    print len(f.read())
+    return redirect(url_for('static', filename="post.html"))
 
 @app.route('/get/<key>', methods=['GET'])
 def get(key):
