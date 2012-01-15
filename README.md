@@ -1,8 +1,9 @@
 
-core / engine
+Core / Engine
 =============
-The system contain a HUGE tree in memroy.
+We find that in the real world every data-source can be represented as a basic structure, a TREE of all types of data, and the tree is efficiency for communication between sub-systems. Based on this idea, we start to design a new realtime monitor system, which contains a HUGE tree in memroy, for realtime usage. History trend data is store in databases.
 
+Here is an example of such structure:
 <pre>
 [
 {'cpu': {'10.3.1.12': {'idle': 32,
