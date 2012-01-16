@@ -167,9 +167,11 @@ write your own module(same as [ganglia python module](http://sourceforge.net/app
 
 reminder 
 =====================
-A: use ganglia-plugin
+A: use ganglia-plugin.
+build a package named 'ganglia-plugin'
+? use ganglia-plugin only
 
-1) LD_PRELOAD=libganglia.so python 
+1) LD_PRELOAD=libganglia.so python
   modload.so
   modcpu.so
 

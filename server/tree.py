@@ -44,7 +44,14 @@ class Tree(object):
             yield ks, x
 
     def __repr__(self):
-        return repr(self._dict)
+        return self._dict.__repr__()
+
+    @property
+    def action(self):
+        if 'default_action' in self._dict:
+            return _action_from_name(self._dict['default_action'])
+        else:
+            return _add
 
 class Item(object):
     def __init__(self, value=None, action=None):
@@ -130,6 +137,9 @@ def merge(d1, d2, default_action=None):
     {1: {2: {3: <Item('5')>}}}
     >>> da[1][2][3].action == _average
     True
+
+    >>> merge(Tree({1:3}), Tree({1:2}))
+    {1: <Item('3')>}
  
     """
     if default_action is None:
@@ -137,6 +147,7 @@ def merge(d1, d2, default_action=None):
             default_action = _action_from_name(d2['default_action'])
         else:
             default_action = _add
+
     d2 = evolve(d2, default_action)
 
     for k,v2 in d2.iteritems():

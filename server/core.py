@@ -2,9 +2,6 @@ from tornado import stack_context
 
 import tree
 
-# TODO: once
-core_tree = tree.Tree()
-
 # 
 class Dispatcher(object):
     """
@@ -53,3 +50,16 @@ class Dispatcher(object):
                 # TODO: log?
                 print e
                 continue
+
+
+# TODO: once
+_tree = tree.Tree()
+waiters = Dispatcher()
+
+def update(key, d):
+    _tree.merge(d)
+    for key in [key for key in waiters.live_signals if tree.keyin(key, d)]:
+        fd = {}
+        for ks, x in _tree.find(key):
+            fd[','.join(ks)] = x.value
+        waiters.send(key, fd)

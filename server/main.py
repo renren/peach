@@ -16,6 +16,7 @@ server.routeto(url)
 
 
 import os, logging
+import StringIO
 
 from tornado.wsgi import WSGIContainer
 from tornado.ioloop import IOLoop
@@ -23,6 +24,7 @@ from tornado.web import FallbackHandler, RequestHandler, Application
 import tornado.web
 
 from pages import app
+import pipe
 
 class MainHandler(RequestHandler):
     def get(self):
@@ -30,8 +32,10 @@ class MainHandler(RequestHandler):
 
     def put(self):
         print 'put body:', len(self.request.body), type(self.request)
-        f = self.request.connection.stream
-        f.read_bytes(10, self._readed)
+        #f = self.request.connection.stream
+        #f.read_bytes(10, self._readed)
+        f = StringIO.StringIO(self.request.body)
+        pipe.run(f)
         self.write('')
 
     def _readed(self, data):

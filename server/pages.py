@@ -3,14 +3,15 @@ import json # TODO: more efficient
 
 from flask import Flask, request, render_template, url_for, redirect, Response, jsonify
 
-from tree import Tree, keyin
-import data
+from tree import keyin
+import core
+import pipe
 
 app = Flask(__name__)
 
 app.debug = True
-app.tree = data.core_tree
-app.waiters = data.Dispatcher()
+app.tree = core._tree # TODO: remove
+app.waiters = core.waiters
 
 
 """
@@ -34,25 +35,16 @@ def push():
     if request.method == 'POST':
         j = request.form['json'].encode('utf-8')
         d = json.loads(j)
-        app.tree.merge(d)
-
-        #
-        if isinstance(d, dict):
-            for key in [key for key in app.waiters.live_signals if keyin(key, d)]:
-                fd = {}
-                for ks, x in app.tree.find(key):
-                    fd[','.join(ks)] = x.value
-                app.waiters.send(key, fd)
+        core.update(d)
     else:
         pass
     return render_template('post.html')
 
-@app.route('/raw', methods=['POST', 'PUT', 'GET'])
+@app.route('/raw', methods=['POST', 'PUT'])
 def raw():
     print '/raw', request.want_form_data_parsed
-    # request.want_form_data_parsed = False    
     f = request.stream
-    print len(f.read())
+    pipe.run(f)
     return redirect(url_for('static', filename="post.html"))
 
 @app.route('/get/<key>', methods=['GET'])
