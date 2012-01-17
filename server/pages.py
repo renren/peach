@@ -1,11 +1,14 @@
 import time
-import json # TODO: more efficient
+try:
+    import simplejson as json
+except:
+    import json
 
 from flask import Flask, request, render_template, url_for, redirect, Response, jsonify
 
 from tree import keyin
 import core
-import pipe
+import pipeline
 
 app = Flask(__name__)
 
@@ -44,7 +47,7 @@ def push():
 def raw():
     print '/raw', request.want_form_data_parsed
     f = request.stream
-    pipe.run(f)
+    pipeline.run(f)
     return redirect(url_for('static', filename="post.html"))
 
 @app.route('/get/<key>', methods=['GET'])

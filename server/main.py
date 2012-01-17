@@ -24,7 +24,7 @@ from tornado.web import FallbackHandler, RequestHandler, Application
 import tornado.web
 
 from pages import app
-import pipe
+import pipeline
 
 class MainHandler(RequestHandler):
     def get(self):
@@ -35,7 +35,7 @@ class MainHandler(RequestHandler):
         #f = self.request.connection.stream
         #f.read_bytes(10, self._readed)
         f = StringIO.StringIO(self.request.body)
-        pipe.run(f)
+        pipeline.run(f)
         self.write('')
 
     def _readed(self, data):
@@ -69,7 +69,10 @@ def main():
         (r"/pull/([^/]+)", PullHandler),
         (r".*", FallbackHandler, dict(fallback=WSGIContainer(app))),
         ], **settings)
-    application.listen(8000)
+    try:
+        application.listen(80)
+    except:
+        application.listen(8000)
     io = IOLoop.instance()
 
     #io.add_timeout(
