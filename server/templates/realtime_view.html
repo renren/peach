@@ -1,0 +1,163 @@
+﻿<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>{{key}}</title>
+		<script type="text/javascript" src="{{url_for('static', filename='jquery-1.6.2.js')}}"></script>
+		<script type="text/javascript" src="{{url_for('static', filename='highcharts.src.js')}}"></script>
+		<script type="text/javascript">
+		  var ac_index = 0;
+		  function nextColor() {
+var ac = [
+'#fafad2', '#ffe4c4', '#00fa9a', '#daa520', '#afeeee', '#7fffd4', '#2f4f4f', '#006400', '#ff6347', 
+'#f0f8ff', 'fff5ee', '#ffe4b5', '#d2691e', '#fff8dc', '#00ff7f', '#da70d6', '#e0ffff', '#8b008b', '#a9a9a9', 
+'#ffdead', '#778899', '#b22222', '#008080', '#f4a460', '#dda0dd', '#191970', '#f08080', '#0000ff', '#fa8072', 
+'#fffacd', '#ff00ff', '#9acd32', '#87cefa', '#d3d3d3', '#8b4513', '#800080', '#f5f5dc', '#000080', '#b0e0e6', 
+'#00ffff', '#ffebcd', '#b8860b', '#faf0e6', '#f8f8ff', '#8fbc8f', '#00ced1', '#cd853f', '#e6e6fa', '#66cdaa',
+'#a52a2a', '#ffdab9', '#00bfff', '#f5deb3', '#32cd32', '#fffff0', '#90ee90', '#f0fff0', '#ffff00', '#00008b', 
+'#ffffe0', '#a0522d', '#ff1493', '#ffa500', '#c0c0c0', '#800000', '#ee82ee', '#9370db', '#d8bfd8', '#cd5c5c', 
+'#2e8b57', '#696969', '#ffe4e1', '#483d8b', '#00ffff', '#d2b48c', '#00ff00', '#ffefd5', '#fdf5e6', '#ffa07a', 
+'#40e0d0', '#e9967a', '#ff4500', '#556b2f', '#fffafa', '#808000', '#bc8f8f', '#0000cd', '#ff0000', '#7b68ee', 
+'#6a5acd', '#f5f5f5', '#808080', '#9400d3', '#f5fffa', '#fff0f5', '#778899', '#f0e68c', '#b0c4de', '#add8e6', 
+'#98fb98', '#6b8e23', '#4682b4', '#ffb6c1', '#4b0082', '#9932cc', '#8b0000', '#87ceeb', '#f0ffff', '#696969', 
+'#7cfc00', '#5f9ea0', '#6495ed', '#ff00ff', '#8a2be2', '#008000', '#adff2f', '#20b2aa', '#ffd700', '#2f4f4f', 
+'#dc143c', '#a9a9a9', '#48d1cc', '#3cb371', '#db7093', '#ffc0cb', '#708090', '#ff8c00', '#eee8aa', '#bdb76b',
+'#fffaf0', '#7fff00', '#4169e1', '#deb887', '#faebd7', '#1e90ff', '#c71585', '#dcdcdc', '#ff7f50', '#d3d3d3', 
+'#ff69b4', '#708090', '#228b22', '#008b8b', '#808080', '#ba55d3'];
+return ac[ac_index++ % ac.length];
+		  }
+
+		  Highcharts.setOptions({
+		    global: {
+		      useUTC: false
+		    }
+		  });
+
+		  var chart;
+		  $(document).ready(function () {
+		    chart = new Highcharts.Chart({
+		      chart: {
+		        renderTo: 'container',
+		        defaultSeriesType: '{{type}}',
+		        marginRight: 0
+		      },
+		      credits: {
+		        enabled: true,
+		        text: 'renren.som',
+		        href: 'http://www.highcharts.com',
+		        position: {
+		          align: 'left',
+		          x: 0,
+		          verticalAlign: 'bottom',
+		          y: -5
+		        },
+		        style: {
+		          cursor: 'pointer',
+		          color: '#909090',
+		          fontSize: '10px'
+		        }
+		      },
+		      title: {
+		        text: '{{key|safe}}'
+		      },
+		      xAxis: {
+		        type: 'datetime',
+		        tickPixelInterval: 50
+		      },
+		      yAxis: {
+		        title: {
+		          text: 'Value'
+		        },
+		        plotLines: [{
+		          value: 0,
+		          width: 1,
+		          color: '#808080'
+		        }]
+		      },
+		      plotOptions: {
+		        line: {
+		          dataLabels: {
+		            enabled: true
+		          },
+		          enableMouseTracking: false
+		        }
+		      },
+		      tooltip: {
+		        formatter: function () {
+		          return '<b>' + this.series.name + '</b><br/>' +
+								Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
+								Highcharts.numberFormat(this.y, 2);
+		        }
+		      },
+		      legend: {
+		        enabled: true,
+		        borderWidth: 0
+		      },
+		      exporting: {
+		        enabled: false
+		      },
+		      series: [{% for k, v in series.iteritems() %}
+		        {name:'{{k|safe}}', data:[[{{now}}, {{v}}]]},{% endfor %}
+		      ]
+		    });
+
+		    pull();
+		  });
+
+		  function findSeries(name) {
+		    for (x in chart.series) {
+		      var val = chart.series[x];
+		      if (val.name == name)
+		        return val;
+		    }
+		  }
+		  function add(name, val) {
+		    var s = findSeries(name);
+		    var data = [];
+
+		    if (!s) {
+		      chart.addSeries({
+		        name: name,
+		        data: data,
+		        color: nextColor()
+		      });
+		      s = findSeries(name);
+		    }
+
+		    var shift = true;
+		    if (s.data.length < 10 || "{{type}}" == 'pie')
+		      shift = false;
+
+		    // console.log('find', s.name, s);
+		    var x = (new Date()).getTime(), // current time
+            y = val;
+		    s.addPoint([x, y], false, shift);
+		  }
+
+		  var stop = false;
+		  function pull() {
+		    $.getJSON('/pull/{{key|safe}}', function (data) {
+		      $.each(data, function (key, val) {
+            if (typeof val == 'number')
+              add(key, val);
+          });
+		      chart.redraw();
+		      if (!stop)
+		        setTimeout(pull, 1);
+		    });
+		  }
+		  function page_stop() {
+		    stop = !stop;
+		    if (!stop)
+		      pull();
+		  }
+		</script>
+		
+	</head>
+	<body>
+		
+		<!-- 3. Add the container -->
+		<div id="container" style="width: 90%; height: 600px; margin: 0 auto"></div>
+		<a onclick="page_stop()" href="#">stop</a>
+	</body>
+</html>
