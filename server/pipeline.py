@@ -26,11 +26,15 @@ def run(f):
     for line in f:
         if not line:
             continue
-        data = parser.parse(line)
+        try:
+            data = parser.parse(line)
+            data = [v for k,v in data]
+        except apachelog.ApacheLogParserError:
+            continue
 
         for p in _pipes:
             # TODO: try
-            p.process(data.values())
+            p.process(data)
 
     for p in _pipes:
         for k, d in p.result():
@@ -73,7 +77,7 @@ if __name__ == '__main__':
     _init()
     logging.debug('installed pipes via init:  %r', _pipes)
 
-    import sys
+    
 
     name = '/data/nginx/logs/access.log'
     if len(sys.argv) > 1:
@@ -86,17 +90,22 @@ if __name__ == '__main__':
 
     format = r'%t %>s %h %ua %ub %uc %v %vu %m %mu %mv %b \"%{Referer}i\" \"%{User-Agent}i\" \"{Forward}\"'
 
-    log = '[17/Jan/2012:17:00:55 +0800] 304 10.2.76.28 - - 0.000 10.2.76.25 - GET /highcharts/js/modules/exporting.js HTTP/1.1 158 "http://10.2.76.28/highcharts/examples/bar-basic.htm" "Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.7 (KHTML, like Gecko) Chrome/16.0.912.75 Safari/535.7" "-"'
+    temp_log = '[17/Jan/2012:17:00:55 +0800] 304 10.2.76.28 - - 0.000 10.2.76.25 - GET /highcharts/js/modules/exporting.js HTTP/1.1 158 "http://10.2.76.28/highcharts/examples/bar-basic.htm" "Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.7 (KHTML, like Gecko) Chrome/16.0.912.75 Safari/535.7" "-"'
 
-    arr = [(r'%t %>s %h %ua',               '[17/Jan/2012:17:00:55 +0800] 304 10.2.76.28 -'),
-           (r'%t %>s %h %ua %ub',           '[17/Jan/2012:17:00:55 +0800] 304 10.2.76.28 10.3.4.1 0.223'),
-           (r'%t %>s %h %ua %ub %uc',       '[17/Jan/2012:17:00:55 +0800] 304 10.2.76.28 10.3.4.1 0.223 0.000'),
-           (r'%t %>s %h %ua %ub %uc %v',    '[17/Jan/2012:17:00:55 +0800] 304 10.2.76.28 10.3.4.1 0.223 0.000 10.2.76.25'),
-           (r'%t %>s %h %ua %ub %uc %v %vu','[17/Jan/2012:17:00:55 +0800] 304 10.2.76.28 10.3.4.1 0.223 0.000 10.2.76.25 -'),
-           (r'%t %>s %h %ua %ub %uc %v %vu %m %mu %mv',          '[17/Jan/2012:17:00:55 +0800] 304 10.2.76.28 10.3.4.1 0.223 0.000 10.2.76.25 - GET /highcharts/js/modules/exporting.js HTTP/1.1'),
-           (r'%t %>s %h %ua %ub %uc %v %vu %m %mu %mv %b \"%{Referer}i\" \"%{User-Agent}i\" \"{Forward}\"',          '[17/Jan/2012:17:00:55 +0800] 304 10.2.76.28 10.3.4.1 0.223 0.000 10.2.76.25 - GET /highcharts/js/modules/exporting.js HTTP/1.1 158 "http://10.2.76.28/highcharts/examples/bar-basic.htm" "Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.7 (KHTML, like Gecko) Chrome/16.0.912.75 Safari/535.7" "-"'),
-           (format, log)
+    arr = [
+           (r'%t %>s %h %ua',               '[17/Jan/2012:17:37:26 +0800] 200 hdn.xnimg.cn 10.22.200.100:80'),
+           (r'%t %>s %h %ua %ub %uc',       '[17/Jan/2012:17:37:26 +0800] 200 hdn.xnimg.cn 10.22.200.100:80 0.001 0.001'),
+           (r'%t %>s %h %ua %ub %uc %v',    '[17/Jan/2012:17:37:26 +0800] 200 hdn.xnimg.cn 10.22.200.100:80 0.001 0.001 183.213.96.62'),
+           (r'%t %>s %h %ua %ub %uc %v %vu %m %mu %mv',          '[17/Jan/2012:17:37:26 +0800] 200 hdn.xnimg.cn 10.22.200.100:80 0.001 0.001 183.213.96.62 - GET /photos/hdn421/20120110/1550/h_head_FluE_718e0002e7ff2f76.jpg HTTP/1.1'),
+           (r'%t %>s %h %ua %ub %uc %v %vu %m %mu %mv %b \"%{Referer}i\" \"%{User-Agent}i\" \"{Forward}\"',          '[17/Jan/2012:17:37:26 +0800] 200 hdn.xnimg.cn 10.22.200.100:80 0.001 0.001 183.213.96.62 - GET /photos/hdn421/20120110/1550/h_head_FluE_718e0002e7ff2f76.jpg HTTP/1.1 4428 "http://www.renren.com/419816894" "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; .NET CLR 2.0.50727; 360SE)" "-"'),
+           # (format, '[17/Jan/2012:17:37:26 +0800] 400 _* - - 0.000 117.136.16.118 - - 0 "-" "-" "-"'),
+           (format, '[17/Jan/2012:17:37:26 +0800] 200 hdn.xnimg.cn 10.22.200.100:80 0.001 0.001 183.213.96.62 - GET /photos/hdn421/20120110/1550/h_head_FluE_718e0002e7ff2f76.jpg HTTP/1.1 4428 "http://www.renren.com/419816894" "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; .NET CLR 2.0.50727; 360SE)" "-"')
            ]
 
     for f, log in arr:
         print apachelog.parser(f).parse(log)
+
+    import sys
+    if len(sys.argv) > 1:
+        run(open(sys.argv[1], 'rb'))
+    print 'result:\n', core._tree
