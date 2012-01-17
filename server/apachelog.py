@@ -181,9 +181,10 @@ class parser:
         match = self._regex.match(line)
         
         if match:
-            data = {}
+            # use [] instead of {}, to ensure order
+            data = []
             for k, v in zip(self._names, match.groups()):
-                data[k] = v
+                data.append((k, v))
             return data
         
         raise ApacheLogParserError("Unable to parse: %s with the %s regular expression" % ( line, self._pattern ) )

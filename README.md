@@ -1,3 +1,10 @@
+Usage
+=====
+<pre>
+pip install flask tornado simplejson
+python server/main.py
+</pre>
+
 
 Core / Engine
 =============
