@@ -2,26 +2,32 @@ import os, glob, logging
 import json
 import urllib2, urllib
 
+import modules.ganglia_c_module
 
 def push_once(url):
-    tree = Agent().run()
-    s = json.dumps(tree)
+    tree = PythonModule().run()
+
+    gm = modules.ganglia_c_module.GangliaModule('modules/gmod32')
+    tree.update(gm.run())
+
+    s = json.dumps({'127.0.0.1': tree})
     s = urllib.urlencode({"json": s})
-    print s
     f = urllib2.urlopen(url, s)
-    print f.read()
+    f.read()
 
 def register(f):
     pass
 
 
-class Agent():
+class PythonModule():
     def __init__(self):
         self.modules = []
         self.init()
 
-    def init(self):
-        for f in glob.glob('modules/*.py'):
+    def init(self, path=None):
+        if path is None:
+            path='modules'
+        for f in glob.glob('%s/*.py' % path):
             name,_ =  os.path.splitext(f)
             name = name.replace('/', '.')
             try:
@@ -48,7 +54,11 @@ class Agent():
         return tree
 
 def main():
-    push_once('http://127.0.0.1:8000/push')
+    import time
+    while True:
+        start = time.time()
+        push_once('http://127.0.0.1:8000/push')
+        time.sleep(max(1, (1 - time.time() + start)))
 
 if __name__ == '__main__':
     # --push

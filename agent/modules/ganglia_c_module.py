@@ -1,4 +1,4 @@
-import ctypes
+import ctypes, os
 
 from lazy import memoized
 
@@ -9,9 +9,11 @@ class foo(ctypes.Structure):
 def test_hello():
     m = ctypes.cdll.LoadLibrary('./foo.so')
 
+    # export struct
     f = foo.in_dll(m, 'crash')
     print f.v, f.c
 
+    # function
     hello = m.hello
     hello.argtypes = [ctypes.POINTER(ctypes.c_char_p), ctypes.c_int]
     hello.restype = ctypes.c_int
@@ -133,7 +135,7 @@ class val(ctypes.Union):
                 ('str', ctypes.c_char * MAX_G_STRING_SIZE)
                 ]
 
-    def raw(self, type):
+    def raw(self, type, fmt=None):
         table = {1: 'str',
                  2: 'uint16',
                  3: 'int16',
@@ -142,7 +144,14 @@ class val(ctypes.Union):
                  6: 'f',
                  7: 'd'}
         if type in table:
-            return getattr(self, table[type])
+            v = getattr(self, table[type])
+            if fmt:
+                vf = fmt % v
+                if type in (2, 3, 4, 5):
+                    v = int(vf)
+                elif type in (6, 7):
+                    v = float(v)
+            return v
         else:
             raise ValueError('type %r error' % type)
 
@@ -190,18 +199,20 @@ class mmodule(ctypes.Structure):
 
         i, info, handler = self._ml[index]
         r = handler(i)
-        return info.name, info.fmt % r.raw(info.type)
+        #return info.name, info.fmt % r.raw(info.type)
+        
+        return info.name,  r.raw(info.type, info.fmt)
 
 @memoized
 def global_pool():
     apr.init()
     return apr.pool_create()
 
-def test_load(preload, name = 'load_module', so = './modload.so'):
+def test_load(name = 'load_module', so = 'gmod32/modload.so', preload=None):
     # 1 load
     if preload:
         g = ctypes.cdll.LoadLibrary(preload)
-    print g.debug_msg
+        print g.debug_msg
     mod = ctypes.cdll.LoadLibrary(so)
     mm = mmodule.in_dll(mod, name)
     print repr(mm)
@@ -224,11 +235,69 @@ def test_load(preload, name = 'load_module', so = './modload.so'):
     for x in xrange(len(mm)):
         print mm.run(x)
 
-import sys
-try:
-    test_load(sys.argv[1], sys.argv[2], sys.argv[3])
-except:
-    pass
+    mm.cleanup()
 
-f= open('/proc/self/maps', 'rb')
-print f.read()
+class GangliaModule(object):
+    """ 'sys': {'boottime': '1327799592',
+             'machine_type': 'x86',
+             'mtu': '1500',
+             'os_name': 'Linux',
+             'os_release': '3.0.0-14-generic',
+             'sys_clock': '1327821240'}"""
+    DEFAULT_MODS = {
+         'load_module': 'modload.so',
+         'cpu_module': 'modcpu.so',
+         'disk_module': 'moddisk.so',
+         'example_module': 'modexample.so',
+         'multicpu_module': 'modmulticpu.so',
+         'proc_module': 'modproc.so',
+         'net_module': 'modnet.so',
+         'mem_module': 'modmem.so'
+         # 'sys_module': 'modsys.so',
+        }
+    def __init__(self, path=None):
+        self.mods = []
+        if path is None:
+            import platform; 
+            bits,_ = platform.architecture()
+            path = 'gmod%s' % bits[:2]
+        for name, so in self.DEFAULT_MODS.iteritems():
+            mod = ctypes.cdll.LoadLibrary(os.path.join(path, so))
+            mm = mmodule.in_dll(mod, name)
+
+            #ret = mm.init(global_pool())
+            #assert ret == 0
+            self.mods.append(mm)
+
+    def run(self):
+        x = {}
+        for m in self.mods:
+            x.update(self.run_module(m))
+        return x
+
+    def run_module(self, mm):
+        ret = mm.init(global_pool())
+        assert ret == 0
+    
+        i = 0
+        x = {}
+        while not not mm.metrics_info[i].name:
+            # TODO: try/except
+            name, val = mm.run(i)
+            x[name] = val
+
+            i += 1
+
+        mm.cleanup()
+
+        def filename_to_name(fn):
+            return fn[1+fn.find('_'):fn.find('.')]
+        return {filename_to_name(mm.name) : x}
+
+if __name__ == '__main__':
+    import sys
+    test_load(sys.argv[1], sys.argv[2])
+
+    ga = GangliaModule() # /usr/lib64/ganglia/
+    import pprint
+    pprint.pprint(ga.run())
