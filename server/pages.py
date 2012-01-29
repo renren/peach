@@ -36,9 +36,16 @@ app.waiters = core.waiters
 @app.route('/push', methods=['GET', 'POST'])
 def push():
     if request.method == 'POST':
-        j = request.form['json'].encode('utf-8')
-        d = json.loads(j)
-        core.update(d)
+        d = {}
+        if 'json' in request.form:
+            j = request.form['json'].encode('utf-8')
+            d = json.loads(j)
+            #import pprint
+            #pprint.pprint(d)
+
+        #for k, v in d.iteritems():
+        if d:
+            core.update(d)
     else:
         pass
     return render_template('post.html')
@@ -55,6 +62,8 @@ def get(key):
     d = {}
     for ks, item in app.tree.find(key):
         d[','.join(ks)] = item.value
+    #else:
+    #    print key, 'not in tree:', app.tree
 
     return jsonify(d)
 

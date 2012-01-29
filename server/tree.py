@@ -29,7 +29,7 @@ class Tree(object):
         if d is None:
             self._dict = {}
         else:
-            action_name = d.get('default_action', 'add')
+            action_name = d.get('default_action', 'average')
             action = _action_from_name(action_name)
             self._dict = evolve(d, action)
 
@@ -51,7 +51,7 @@ class Tree(object):
         if 'default_action' in self._dict:
             return _action_from_name(self._dict['default_action'])
         else:
-            return _add
+            return _average
 
 class Item(object):
     def __init__(self, value=None, action=None):
@@ -146,7 +146,7 @@ def merge(d1, d2, default_action=None):
         if 'default_action' in d2:
             default_action = _action_from_name(d2['default_action'])
         else:
-            default_action = _add
+            default_action = _average
 
     d2 = evolve(d2, default_action)
 

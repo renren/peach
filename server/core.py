@@ -56,10 +56,16 @@ class Dispatcher(object):
 _tree = tree.Tree()
 waiters = Dispatcher()
 
-def update(key, d):
-    _tree.merge(d)
+def update(d):
+    # fire first
+    t = tree.Tree(d)
     for key in [key for key in waiters.live_signals if tree.keyin(key, d)]:
         fd = {}
-        for ks, x in _tree.find(key):
+        for ks, x in t.find(key):
             fd[','.join(ks)] = x.value
+        #print 'fire', key, fd
         waiters.send(key, fd)
+    # print 'an merge result', _tree
+
+    # update
+    _tree.merge(d)

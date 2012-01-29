@@ -125,7 +125,7 @@ return ac[ac_index++ % ac.length];
 		    }
 
 		    var shift = true;
-		    if (s.data.length < 10 || "{{type}}" == 'pie')
+		    if (s.data.length < (document.width * 0.9/10) || "{{type}}" == 'pie')
 		      shift = false;
 
 		    // console.log('find', s.name, s);
