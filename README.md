@@ -154,7 +154,7 @@ directory
 <pre>
 agent/
 agent/modules/*.py *.so  
-  support ganglia module
+             gmod[32|64]/support ganglia module
 agent/conf/*.conf *.on *.off
 agent/agent.conf
 
