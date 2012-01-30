@@ -6,7 +6,7 @@ except:
 
 from flask import Flask, request, render_template, url_for, redirect, Response, jsonify
 
-from tree import keyin
+import tree
 import core
 import pipeline
 
@@ -61,7 +61,10 @@ def raw():
 def get(key):
     d = {}
     for ks, item in app.tree.find(key):
-        d[','.join(ks)] = item.value
+        if isinstance(item, tree.Item):
+            d[','.join(ks)] = item.value
+        else:
+            d[','.join(ks)] = item
     #else:
     #    print key, 'not in tree:', app.tree
 
@@ -71,7 +74,10 @@ def get(key):
 def realtime_view(key):
     d = {}
     for ks, item in app.tree.find(key):
-        d[','.join(ks)] = item.value
+        if isinstance(item, tree.Item):
+            d[','.join(ks)] = item.value
+        else:
+            d[','.join(ks)] = item
     type = request.args.get('type', 'spline')
     return render_template('realtime_view.html', key=key, series=d, type=type, now=int(1000*time.time()))
 
