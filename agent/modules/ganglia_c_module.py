@@ -1,4 +1,5 @@
 import ctypes, os
+import logging
 
 from lazy import memoized
 
@@ -248,7 +249,7 @@ class GangliaModule(object):
          'load_module': 'modload.so',
          'cpu_module': 'modcpu.so',
          'disk_module': 'moddisk.so',
-         'example_module': 'modexample.so',
+         # 'example_module': 'modexample.so',
          'multicpu_module': 'modmulticpu.so',
          'proc_module': 'modproc.so',
          'net_module': 'modnet.so',
@@ -261,8 +262,16 @@ class GangliaModule(object):
             import platform; 
             bits,_ = platform.architecture()
             path = 'gmod%s' % bits[:2]
+            if bits == '64bit': # hack
+                path = '/usr/lib64/ganglia'
+            elif bits == '32bit':
+                path = 'gmod32'
         for name, so in self.DEFAULT_MODS.iteritems():
-            mod = ctypes.cdll.LoadLibrary(os.path.join(path, so))
+            try:
+                mod = ctypes.cdll.LoadLibrary(os.path.join(path, so))
+            except:
+                logging.warning('module %s %s load failed', path, so)
+                continue
             mm = mmodule.in_dll(mod, name)
 
             #ret = mm.init(global_pool())
@@ -298,6 +307,6 @@ if __name__ == '__main__':
     import sys
     test_load(sys.argv[1], sys.argv[2])
 
-    ga = GangliaModule() # /usr/lib64/ganglia/
+    ga = GangliaModule('/usr/lib64/ganglia') # /usr/lib64/ganglia/
     import pprint
     pprint.pprint(ga.run())

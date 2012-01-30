@@ -1,8 +1,8 @@
 import httpagentparser
 import tree
 
-_os = tree.Tree({'os': {}})
-_br = tree.Tree({'br': {}})
+_os = tree.Tree({'os': {}, 'default_action':'add'})
+_br = tree.Tree({'br': {}, 'default_action':'add'})
 
 def add(t):
     a = t.get('os')
@@ -40,8 +40,8 @@ def result():
     global _os, _br
     # TODO: ugly ._dict
     x = ('os', _os._dict), ('br', _br._dict)
-    _os = tree.Tree({'os': {}})
-    _br = tree.Tree({'br': {}})
+    _os = tree.Tree({'os': {}, 'default_action':'add'})
+    _br = tree.Tree({'br': {}, 'default_action':'add'})
     return x
 
 def init():

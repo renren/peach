@@ -28,13 +28,14 @@ class Tree(object):
     def __init__(self, d=None):
         if d is None:
             self._dict = {}
+            self.action = _average
         else:
             action_name = d.get('default_action', 'average')
-            action = _action_from_name(action_name)
-            self._dict = evolve(d, action)
+            self.action = _action_from_name(action_name)
+            self._dict = evolve(d, self.action)
 
     def merge(self, d):
-        self._dict = merge(self._dict, d)
+        self._dict = merge(self._dict, d, self.action)
 
     def find(self, name):
         # right, same as right
@@ -45,13 +46,6 @@ class Tree(object):
 
     def __repr__(self):
         return self._dict.__repr__()
-
-    @property
-    def action(self):
-        if 'default_action' in self._dict:
-            return _action_from_name(self._dict['default_action'])
-        else:
-            return _average
 
 class Item(object):
     def __init__(self, value=None, action=None):
@@ -119,54 +113,64 @@ def merge(d1, d2, default_action=None):
     >>> merge({1: Item(1,_add)}, {3: Item(1,_add)})
     {1: <Item('1')>, 3: <Item('1')>}
     >>> merge({1: Item(1,_add)}, {1: 2})
-    {1: <Item('3')>}
-    >>> merge({1: Item(1,_add)}, {1: 2})
+    {1: <Item('1.5')>}
+    >>> merge({1: Item(1,_add)}, {1: 2}, _add)
     {1: <Item('3')>}
 
-    >>> merge({1: {2:Item(3, _add)}}, {1:{2:4}})
+    >>> merge({1: {2:Item(3, _add)}}, {1:{2:4}}, _add)
     {1: {2: <Item('7')>}}
 
     >>> merge({1: {2:Item(3, _add)}}, {1:4})
     {1: {'count': <Item('4')>, 2: <Item('3')>}}
 
     >>> merge({1:Item(4, _add)}, {1: {2: {3:5}}})
-    {1: {'count': <Item('4')>, 2: {3: <Item('5')>}}}
+    {1: {'count': <Item('4')>, 2: {3: 5}}}
 
     >>> da = merge({1:{}}, {'default_action':'average',1: {2: {3:5}}})
     >>> da
-    {1: {2: {3: <Item('5')>}}}
-    >>> da[1][2][3].action == _average
-    True
+    {1: {2: {3: 5}}, 'default_action': 'average'}
 
-    >>> merge(Tree({1:3}), Tree({1:2}))
+    >>> merge(Tree({1:3}), Tree({1:2})) # doctest:+SKIP
     {1: <Item('3')>}
- 
+
+    >>> merge({'os': {}, 'default_action':'add'}, {'os' : {'Windows': {'NT 5.1': 1, 'NT 6.1':2}}})
+    {'default_action': 'add', 'os': {'Windows': {'NT 5.1': 1, 'NT 6.1': 2}}}
+    >>> merge({'os': {'Windows': {'NT 5.1': 2, 'NT 6.1':4}}, 'default_action':'add'}, {'os' : {'Windows': {'NT 5.1': 1, 'NT 6.1':2}}})
+    {'default_action': 'add', 'os': {'Windows': {'NT 5.1': <Item('3')>, 'NT 6.1': <Item('6')>}}}
+    
+    # TDOO: merge result action missing
     """
     if default_action is None:
         if 'default_action' in d2:
             default_action = _action_from_name(d2['default_action'])
+        elif 'default_action' in d1:
+            default_action = _action_from_name(d1['default_action'])
         else:
             default_action = _average
-
-    d2 = evolve(d2, default_action)
 
     for k,v2 in d2.iteritems():
         if k not in d1:
             d1[k] = v2
         else:
             v1 = d1[k]
-            if isinstance(v1, Item) and isinstance(v2, Item):
+            if isinstance(v1, Item) and isinstance(v2, (Item)):
                 #d1[k] = v1 + v2
                 v1 += v2
+            elif isinstance(v1, Item) and isinstance(v2, (int, long, float)):
+                v1 += Item(v2, default_action)
             elif isinstance(v1, dict) and isinstance(v2, dict):
                 d1[k] = merge(v1, v2, default_action)
             elif isinstance(v1, dict) and isinstance(v2, Item):
                 v1['count'] = v2
+            elif isinstance(v1, dict) and isinstance(v2, (int, long, float)):
+                v1['count'] = Item(v2, default_action)
             elif isinstance(v1, Item) and isinstance(v2, dict):
                 v2.update({'count':v1})
                 d1[k] = v2
+            elif isinstance(v1, (int, long, float)) and isinstance(v2, (int, long, float)):
+                d1[k] = Item(v1, default_action) + Item(v2, default_action)
             else:
-                assert False, 'merge unespected type k: %r v1: %r v2: %r' % (k, v1, v2)
+                assert False, 'merge unespected type k: %r v1: %r[%r] v2: %r[%r]' % (k, v1, type(v1), v2, type(v2))
     return d1
 
 def keyin(key, d):

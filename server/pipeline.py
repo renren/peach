@@ -39,8 +39,7 @@ def run(f):
     for p in _pipes:
         for k, d in p.result():
             core.update(d)
-
-        logging.debug('pipe run %s: %r', k, d)
+            logging.debug('pipe run %s: %r', k, d)
 
 def add(m):
     _pipes.append(m)
@@ -67,12 +66,19 @@ def _init():
     logging.debug('installed pipes via init:  %r', _pipes)
     print _pipes
 
-print 'import once'
-_init()
+_init() # TODO: once
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
+    print logging.root.level
+    logging.basicConfig(level=logging.DEBUG)
+    print logging.root.getEffectiveLevel()
+    logging.root.setLevel(logging.DEBUG)
+    print logging.root.getEffectiveLevel()
+
+    logging.debug('installed pipes via init:  %r', _pipes)
+    logging.info('installed pipes via init:  %r', _pipes)
     """
     _init()
     logging.debug('installed pipes via init:  %r', _pipes)
@@ -103,9 +109,14 @@ if __name__ == '__main__':
            ]
 
     for f, log in arr:
-        print apachelog.parser(f).parse(log)
+        apachelog.parser(f).parse(log)
 
     import sys
     if len(sys.argv) > 1:
-        run(open(sys.argv[1], 'rb'))
+        f = open(sys.argv[1], 'rb')
+    else:
+        f = sys.stdin
+
+    run(f)
+
     print 'result:\n', core._tree

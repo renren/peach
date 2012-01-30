@@ -7,7 +7,7 @@ import modules.ganglia_c_module
 def push_once(url):
     tree = PythonModule().run()
 
-    gm = modules.ganglia_c_module.GangliaModule('modules/gmod32')
+    gm = modules.ganglia_c_module.GangliaModule()
     tree.update(gm.run())
 
     s = json.dumps({'127.0.0.1': tree})
@@ -57,7 +57,7 @@ def main():
     import time
     while True:
         start = time.time()
-        push_once('http://127.0.0.1:8000/push')
+        push_once('http://127.0.0.1/push')
         time.sleep(max(1, (1 - time.time() + start)))
 
 if __name__ == '__main__':
