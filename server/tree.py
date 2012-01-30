@@ -130,8 +130,8 @@ def merge(d1, d2, default_action=None):
     >>> da
     {1: {2: {3: 5}}, 'default_action': 'average'}
 
-    >>> merge(Tree({1:3}), Tree({1:2})) # doctest:+SKIP
-    {1: <Item('3')>}
+    >>> merge(Tree({1:3}), Tree({1:2}))
+    {1: <Item('2.5')>}
 
     >>> merge({'os': {}, 'default_action':'add'}, {'os' : {'Windows': {'NT 5.1': 1, 'NT 6.1':2}}})
     {'default_action': 'add', 'os': {'Windows': {'NT 5.1': 1, 'NT 6.1': 2}}}
@@ -141,12 +141,18 @@ def merge(d1, d2, default_action=None):
     # TDOO: merge result action missing
     """
     if default_action is None:
-        if 'default_action' in d2:
+        if isinstance(d2, dict) and 'default_action' in d2:
             default_action = _action_from_name(d2['default_action'])
-        elif 'default_action' in d1:
+        elif isinstance(d1, dict) and 'default_action' in d1:
             default_action = _action_from_name(d1['default_action'])
         else:
             default_action = _average
+
+    if isinstance(d2, Tree):
+        d2 = d2._dict
+
+    if isinstance(d1, Tree):
+        d1 = d1._dict
 
     for k,v2 in d2.iteritems():
         if k not in d1:

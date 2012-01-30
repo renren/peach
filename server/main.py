@@ -31,11 +31,11 @@ class MainHandler(RequestHandler):
         self.write("This message comes from Tornado ^_^")
 
     def put(self):
-        print 'put body:', len(self.request.body), type(self.request)
-        #f = self.request.connection.stream
-        #f.read_bytes(10, self._readed)
         f = StringIO.StringIO(self.request.body)
-        pipeline.run(f)
+        try:
+            pipeline.run(f)
+        except:
+            logging.exception('put failed')
         self.write('')
 
     def _readed(self, data):

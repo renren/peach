@@ -39,7 +39,7 @@ def run(f):
     for p in _pipes:
         for k, d in p.result():
             core.update(d)
-            logging.debug('pipe run %s: %r', k, d)
+            #logging.debug('pipe run %s: %r', k, d)
 
 def add(m):
     _pipes.append(m)
