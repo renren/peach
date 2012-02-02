@@ -20,24 +20,29 @@ body {
 		<script type="text/javascript">
 		  var ac_index = 0;
 		  function nextColor() {
-var ac = [
-'#fafad2', '#ffe4c4', '#00fa9a', '#daa520', '#afeeee', '#7fffd4', '#2f4f4f', '#006400', '#ff6347', 
-'#f0f8ff', 'fff5ee', '#ffe4b5', '#d2691e', '#fff8dc', '#00ff7f', '#da70d6', '#e0ffff', '#8b008b', '#a9a9a9', 
-'#ffdead', '#778899', '#b22222', '#008080', '#f4a460', '#dda0dd', '#191970', '#f08080', '#0000ff', '#fa8072', 
-'#fffacd', '#ff00ff', '#9acd32', '#87cefa', '#d3d3d3', '#8b4513', '#800080', '#f5f5dc', '#000080', '#b0e0e6', 
-'#00ffff', '#ffebcd', '#b8860b', '#faf0e6', '#f8f8ff', '#8fbc8f', '#00ced1', '#cd853f', '#e6e6fa', '#66cdaa',
-'#a52a2a', '#ffdab9', '#00bfff', '#f5deb3', '#32cd32', '#fffff0', '#90ee90', '#f0fff0', '#ffff00', '#00008b', 
-'#ffffe0', '#a0522d', '#ff1493', '#ffa500', '#c0c0c0', '#800000', '#ee82ee', '#9370db', '#d8bfd8', '#cd5c5c', 
-'#2e8b57', '#696969', '#ffe4e1', '#483d8b', '#00ffff', '#d2b48c', '#00ff00', '#ffefd5', '#fdf5e6', '#ffa07a', 
-'#40e0d0', '#e9967a', '#ff4500', '#556b2f', '#fffafa', '#808000', '#bc8f8f', '#0000cd', '#ff0000', '#7b68ee', 
-'#6a5acd', '#f5f5f5', '#808080', '#9400d3', '#f5fffa', '#fff0f5', '#778899', '#f0e68c', '#b0c4de', '#add8e6', 
-'#98fb98', '#6b8e23', '#4682b4', '#ffb6c1', '#4b0082', '#9932cc', '#8b0000', '#87ceeb', '#f0ffff', '#696969', 
-'#7cfc00', '#5f9ea0', '#6495ed', '#ff00ff', '#8a2be2', '#008000', '#adff2f', '#20b2aa', '#ffd700', '#2f4f4f', 
-'#dc143c', '#a9a9a9', '#48d1cc', '#3cb371', '#db7093', '#ffc0cb', '#708090', '#ff8c00', '#eee8aa', '#bdb76b',
-'#fffaf0', '#7fff00', '#4169e1', '#deb887', '#faebd7', '#1e90ff', '#c71585', '#dcdcdc', '#ff7f50', '#d3d3d3', 
-'#ff69b4', '#708090', '#228b22', '#008b8b', '#808080', '#ba55d3'];
-return ac[ac_index++ % ac.length];
+        	return rainbow(50, ac_index++);
 		  }
+
+      function rainbow(numOfSteps, step) {
+          // This function generates vibrant, "evenly spaced" colours (i.e. no clustering). This is ideal for creating easily distiguishable vibrant markers in Google Maps and other apps.
+          // Adam Cole, 2011-Sept-14
+          // HSV to RBG adapted from: http://mjijackson.com/2008/02/rgb-to-hsl-and-rgb-to-hsv-color-model-conversion-algorithms-in-javascript
+          var r, g, b;
+          var h = step / numOfSteps;
+          var i = ~~(h * 6);
+          var f = h * 6 - i;
+          var q = 1 - f;
+          switch(i % 6){
+              case 0: r = 1, g = f, b = 0; break;
+              case 1: r = q, g = 1, b = 0; break;
+              case 2: r = 0, g = 1, b = f; break;
+              case 3: r = 0, g = q, b = 1; break;
+              case 4: r = f, g = 0, b = 1; break;
+              case 5: r = 1, g = 0, b = q; break;
+          }
+          var c = "#" + ("00" + (~ ~(r * 255)).toString(16)).slice(-2) + ("00" + (~ ~(g * 255)).toString(16)).slice(-2) + ("00" + (~ ~(b * 255)).toString(16)).slice(-2);
+          return (c);
+      }
 
 		  Highcharts.setOptions({
 		    global: {
@@ -45,17 +50,65 @@ return ac[ac_index++ % ac.length];
 		    }
 		  });
 
+		  function toSeries(da) {
+		  	// [['br,Chrome,10.0.648.45', 7.0],..
+		  	// [{name:'', data:[[now, y]}
+		  	var now = (new Date()).getTime();
+		  	var ret = [];
+		  	for(var i=0; i<da.length; ++i) {
+		  		ret.push({name:da[i][0], data:[[now,da[i][1]]]});
+		  	}
+		  	return ret;
+		  }
+
+		  function toPieData(da) {
+		  	// [{type: 'pie',data:[['firefox', 10], ['ie', 20]]}];
+		  	var sa = {}; // map[name] = count
+			$.each(da, function(k,v){
+				if ($.isArray(da)) {
+					var a = v[0].split(',');
+					var c = v[1];
+				} else {
+					var a = k.split(',');
+					var c = v;
+				}
+
+				console.log(a.length, title.split(',').length);
+				if (a.length >= title.split(',').length + 2)
+		  			var name = a.slice(0, a.length - 1).join(',');
+		  		else
+		  			var name = a.join(',');
+
+		  		if (isNaN(sa[name]))
+		  			sa[name] = c;
+		  		else
+		  			sa[name] += c;
+			});
+		  	
+		  	// convert map to Array
+		  	var sd = [];
+		  	for(var k in sa) {
+		  		sd.push([k, sa[k]]);
+		  	}
+		  	return sd;
+		  }
+
+		  var title = "{{key}}";
+		  var data = [{% for k, v in series %}['{{k|safe}}', {{v}}],
+		  	{% endfor %}];
+		  var chart_type = '{{type}}';
 		  var chart;
 		  $(document).ready(function () {
 		    chart = new Highcharts.Chart({
 		      chart: {
+		      	animation: true,
 		        renderTo: 'container',
-		        defaultSeriesType: '{{type}}',
+		        defaultSeriesType: chart_type,
 		        marginRight: 0
 		      },
 		      credits: {
 		        enabled: true,
-		        text: 'renren.som',
+		        text: 'renren.som via highcharts.com',
 		        href: 'http://www.highcharts.com',
 		        position: {
 		          align: 'left',
@@ -96,9 +149,12 @@ return ac[ac_index++ % ac.length];
 		      },
 		      tooltip: {
 		        formatter: function () {
-		          return '<b>' + this.series.name + '</b><br/>' +
+		        	if (chart_type !='pie')
+		          		return '<b>' + this.series.name + '</b><br/>' +
 								Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
 								Highcharts.numberFormat(this.y, 2);
+					else
+						return '<b>'+ this.point.name +'</b>: '+ this.percentage +' %';
 		        }
 		      },
 		      legend: {
@@ -108,15 +164,25 @@ return ac[ac_index++ % ac.length];
 		      exporting: {
 		        enabled: false
 		      },
-		      series: [{% for k, v in series.iteritems() %}
-		        {name:'{{k|safe}}', data:[[{{now}}, {{v}}]]},{% endfor %}
-		      ]
+		      series: (function(){
+		      	if (chart_type != 'pie')
+			      	return toSeries(data);
+			    else
+			    	return [{type: 'pie', data: toPieData(data)}];
+			  })()
 		    });
 
 		    pull();
+
+		    $('a#stop').click(function(){
+		    	stop = !stop;
+		    	$(this).text(stop ? 'continue' : 'stop');
+		    	if (!stop)
+		    		pull();
+		    })
 		  });
 
-		  function findSeries(name) {
+		  function findSerie(name) {
 		    for (x in chart.series) {
 		      var val = chart.series[x];
 		      if (val.name == name)
@@ -124,7 +190,7 @@ return ac[ac_index++ % ac.length];
 		    }
 		  }
 		  function add(name, val) {
-		    var s = findSeries(name);
+		    var s = findSerie(name);
 		    var data = [];
 
 		    if (!s) {
@@ -133,35 +199,33 @@ return ac[ac_index++ % ac.length];
 		        data: data,
 		        color: nextColor()
 		      });
-		      s = findSeries(name);
+		      s = findSerie(name);
 		    }
 
-		    var shift = true;
-		    if (s.data.length < (document.width * 0.9/10) || "{{type}}" == 'pie')
-		      shift = false;
-
-		    // console.log('find', s.name, s);
+	        // shift = (s.data.length > (document.body.clientWidth * 0.9/20));
+	        var shift  = s.data.length > 20;
 		    var x = (new Date()).getTime(), // current time
-            y = val;
+            	y = val;
 		    s.addPoint([x, y], false, shift);
 		  }
 
 		  var stop = false;
 		  function pull() {
 		    $.getJSON('/pull/{{key|safe}}', function (data) {
-		      $.each(data, function (key, val) {
-            if (typeof val == 'number')
-              add(key, val);
-          });
-		      chart.redraw();
-		      if (!stop)
-		        setTimeout(pull, 1);
+		    	if (chart_type == 'pie') {
+		    		chart.series[0].setData(toPieData(data), true);
+		    	}
+		    	else {
+		      		$.each(data, function (key, val) {
+			      		if (typeof val == 'number')
+	              			add(key, val);
+	          		});
+	          		chart.redraw();
+	          	}
+		      
+		      	if (!stop)
+		        	setTimeout(pull, 1);
 		    });
-		  }
-		  function page_stop() {
-		    stop = !stop;
-		    if (!stop)
-		      pull();
 		  }
 		</script>
 		
@@ -170,6 +234,6 @@ return ac[ac_index++ % ac.length];
 		
 		<!-- 3. Add the container -->
 		<div id="container" style="width: 90%; height: 600px; margin: 0 auto"></div>
-		<a onclick="page_stop()" href="#">stop</a>
+		<a id="stop" href="#">pause</a>
 	</body>
 </html>

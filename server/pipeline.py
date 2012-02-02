@@ -1,10 +1,10 @@
 import os, sys, glob
 import logging
 
+import lazy
 import apachelog
 import core
 
-_pipes = []
 """
 log_format tjmain '[$time_local] $status $host '
                       '$upstream_addr $upstream_response_time $request_time '
@@ -23,29 +23,35 @@ format = r'%t %>s %h %ua %ub %uc %v %vu %m %mu %mv %b \"%{Referer}i\" \"%{User-A
 parser = apachelog.parser(format)
 
 def run(f):
+    count_line, count_failed = 0, 0
     for line in f:
         if not line:
             continue
         try:
+            count_line += 1
             data = parser.parse(line)
             data = [v for k,v in data]
         except apachelog.ApacheLogParserError:
+            #logging.exception('pipeline parse')
+            count_failed += 1
             continue
 
-        for p in _pipes:
-            # TODO: try
-            p.process(data)
+        for p in pipes():
+            try:
+                p.process(data)
+            except:
+                logging.exception('pipeline process')
 
-    for p in _pipes:
+    for p in pipes():
         for k, d in p.result():
             core.update(d)
             #logging.debug('pipe run %s: %r', k, d)
+    logging.debug('pipe process %d line, %d failed', count_line, count_failed)
 
-def add(m):
-    _pipes.append(m)
-
-def _init():
-    # dir = os.path.join(os.path.dirname(__file__), 'pipes')
+@lazy.memoized
+def pipes():
+    _pipes = []
+    #dir = os.path.join(os.path.dirname(__file__), 'pipes')
     dir = 'pipes'
     pattern = os.path.join(dir, '*.py')
     for f in glob.glob(pattern):
@@ -63,10 +69,8 @@ def _init():
         _, base = name.split('.')
         _pipes.append(getattr(m, base))
 
-    logging.debug('installed pipes via init:  %r', _pipes)
-    print _pipes
-
-_init() # TODO: once
+    logging.debug('installed pipes: %r', _pipes)
+    return _pipes
 
 
 if __name__ == '__main__':
@@ -77,11 +81,11 @@ if __name__ == '__main__':
     logging.root.setLevel(logging.DEBUG)
     print logging.root.getEffectiveLevel()
 
-    logging.debug('installed pipes via init:  %r', _pipes)
-    logging.info('installed pipes via init:  %r', _pipes)
+    logging.debug('installed pipes via init:  %r', pipes())
+    logging.info('installed pipes via init:  %r', pipes())
     """
     _init()
-    logging.debug('installed pipes via init:  %r', _pipes)
+    logging.debug('installed pipes via init:  %r', pipes())
 
     
 

@@ -48,16 +48,21 @@ class PythonModule():
                 for d in desc:
                     name = d['name']
                     r = d['call_back'](name)
-                    tree.setdefault(name, d['format'] % r)
+                    tree.setdefault(name, float(d['format'] % r))
             except Exception,e:
                 logging.debug('run module %r failed %r' % (m,e))
         return tree
 
 def main():
+    import sys
     import time
+    if len(sys.argv)>1:
+        url = sys.argv[1]
+    else:
+        url = 'http://127.0.0.1/push'
     while True:
         start = time.time()
-        push_once('http://127.0.0.1/push')
+        push_once(url)
         time.sleep(max(1, (1 - time.time() + start)))
 
 if __name__ == '__main__':

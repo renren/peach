@@ -136,7 +136,7 @@ class Netscape(Browser):
 class MSIE(Browser):
     look_for = "MSIE"
     skip_if_found = ["Opera"]
-    name = "Microsoft Internet Explorer"
+    name = "MSIE" #Microsoft Internet Explorer"
     version_splitters = [" ", ";"]
 
 
@@ -182,7 +182,7 @@ class Macintosh(OS):
 
 class MacOS(Flavor):
     look_for = 'Mac OS'
-    prefs = dict(browser=['Firefox', 'Opera', "Microsoft Internet Explorer"])
+    prefs = dict(browser=['Firefox', 'Opera', "MSIE"])
 
     def getVersion(self, agent):
         version_end_chars = [';', ')']
@@ -196,7 +196,7 @@ class MacOS(Flavor):
 
 class Windows(OS):
     look_for = 'Windows'
-    prefs = dict(browser=["Microsoft Internet Explorer", 'Firefox'], dict=None, flavor=None)
+    prefs = dict(browser=["MSIE", 'Firefox'], dict=None, flavor=None)
 
     def getVersion(self, agent):
         v = agent.split('Windows')[-1].split(';')[0].strip()

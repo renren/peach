@@ -4,7 +4,7 @@ try:
 except:
     import json
 
-from flask import Flask, request, render_template, url_for, redirect, Response, jsonify
+from flask import Flask, request, render_template, url_for, redirect, Response, jsonify, make_response
 
 import tree
 import core
@@ -16,22 +16,11 @@ app.debug = True
 app.tree = core._tree # TODO: remove
 app.waiters = core.waiters
 
+#app.add_url_rule('/favicon.ico', redirect_to=url_for('static', filename='favicon.ico'))
 
-"""
-/push  
-  form field support json/accesslog  
-  json -> merge into core tree  
-  accesslog -> pipes -> tree -> merge into core tree  
-  
-/pull/?key-br  
-/pull/?key-br,ie  
-/pull/?key-br,ie,7  
-  comet, repsonse in json list  
-    [{br,ie,7 : 2328},  
-    {br,ie,sogou,3 : 323}]  
-/get/<name>
-  response immediatly in json list
-"""
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route('/push', methods=['GET', 'POST'])
 def push():
@@ -40,8 +29,6 @@ def push():
         if 'json' in request.form:
             j = request.form['json'].encode('utf-8')
             d = json.loads(j)
-            #import pprint
-            #pprint.pprint(d)
 
         #for k, v in d.iteritems():
         if d:
@@ -52,37 +39,34 @@ def push():
 
 @app.route('/raw', methods=['POST', 'PUT'])
 def raw():
-    print '/raw', request.want_form_data_parsed
     f = request.stream
     pipeline.run(f)
     return redirect(url_for('static', filename="post.html"))
 
-@app.route('/get/<key>', methods=['GET'])
-def get(key):
-    d = {}
+def getmatch(key):
+    d = []
     for ks, item in app.tree.find(key):
         if isinstance(item, tree.Item):
-            d[','.join(ks)] = item.value
+            v = item.value
         else:
-            d[','.join(ks)] = item
-    #else:
-    #    print key, 'not in tree:', app.tree
+            v = item
+        d.append((','.join(ks), v))
 
-    return jsonify(d)
+    d.sort(key=lambda x: x[0])
+    return d
+
+@app.route('/get/<key>', methods=['GET'])
+def get(key):
+    d = getmatch(key)
+    #return jsonify(d)
+    return Response(json.dumps(d, indent=None if request.is_xhr else 2), mimetype='application/json')
 
 @app.route('/realtime/<key>', methods=['GET'])
 def realtime_view(key):
-    d = {}
-    for ks, item in app.tree.find(key):
-        if isinstance(item, tree.Item):
-            d[','.join(ks)] = item.value
-        else:
-            d[','.join(ks)] = item
+    d = getmatch(key)
     type = request.args.get('type', 'spline')
     return render_template('realtime_view.html', key=key, series=d, type=type, now=int(1000*time.time()))
 
 @app.route('/flask')
 def hello_world():
   return 'This comes from Flask ^_^'
-
-

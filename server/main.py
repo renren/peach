@@ -1,45 +1,41 @@
-"""
-agent  ---->   server   ----> DB
-                /             |
-               /              |
-          realtime        trend web
-
-agent.Agent.run/init
-      push_once
-
-server.routeto(url)
-       start(host, port)
-       main
-       
-
-"""
-
-
 import os, logging
-import StringIO
+from cStringIO import StringIO
 
 from tornado.wsgi import WSGIContainer
 from tornado.ioloop import IOLoop
 from tornado.web import FallbackHandler, RequestHandler, Application
 import tornado.web
 
+# https://gist.github.com/1510715
+# https://gist.github.com/753992
+from chunked_handler import ChunkedHandler
 from pages import app
 import pipeline
 
-class MainHandler(RequestHandler):
+class MainHandler(ChunkedHandler):
     def get(self):
         self.write("This message comes from Tornado ^_^")
 
     def put(self):
-        f = StringIO.StringIO(self.request.body)
+        if not self._handle_chunked():
+            f = StringIO(self.request.body)
+            logging.debug('/put %d bytes', len(self.request.body))
+            self.process(f)
+            self.write('')
+
+    def _on_chunks(self, chunk):
+        #super(MainHandler, self)._on_chunks(all_chunks)
+        print 'chunk length', chunk.tell()
+        chunk.seek(0, 0)
+        self.process(chunk)
+        self.write('')
+        self.finish()
+    
+    def process(self, f):
         try:
             pipeline.run(f)
         except:
             logging.exception('put failed')
-        self.write('')
-
-    def _readed(self, data):
-        print len(data)
 
 class PullHandler(RequestHandler):
     @tornado.web.asynchronous

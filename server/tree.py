@@ -175,6 +175,8 @@ def merge(d1, d2, default_action=None):
                 d1[k] = v2
             elif isinstance(v1, (int, long, float)) and isinstance(v2, (int, long, float)):
                 d1[k] = Item(v1, default_action) + Item(v2, default_action)
+            elif isinstance(v1, (int, long, float)) and isinstance(v2, Item):
+                d1[k] = Item(v1, default_action) + v2
             else:
                 assert False, 'merge unespected type k: %r v1: %r[%r] v2: %r[%r]' % (k, v1, type(v1), v2, type(v2))
     return d1
