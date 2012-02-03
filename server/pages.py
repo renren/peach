@@ -43,6 +43,17 @@ def raw():
     pipeline.run(f)
     return redirect(url_for('static', filename="post.html"))
 
+def as_dict(o):
+    if issubclass(o.__class__, tree.Item):
+        return o.value
+    return o
+
+@app.route('/all')
+def all():
+    #return jsonify(app.tree._dict)
+    return Response(json.dumps(app.tree._dict, default=as_dict,indent=None if request.is_xhr else 2), mimetype='application/json')
+    
+
 def getmatch(key):
     d = []
     for ks, item in app.tree.find(key):
