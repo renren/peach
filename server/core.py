@@ -1,5 +1,5 @@
+import logging
 from tornado import stack_context
-
 import tree
 
 # 
@@ -38,17 +38,17 @@ class Dispatcher(object):
     def send(self, signal, value):
         try:
             cs = self._signals.pop(signal)
-        except Exception,e:
+        except:
             # TODO: log
-            print e
+            logging.exception('pop')
             return
         
         for callback in cs:
             try:
                 callback(value)
-            except Exception,e:
+            except:
                 # TODO: log?
-                print e
+                logging.exception('send callback')
                 continue
 
 
@@ -59,13 +59,13 @@ waiters = Dispatcher()
 def update(d):
     # fire first
     t = tree.Tree(d)
+    #print 'live', waiters.live_signals
     for key in [key for key in waiters.live_signals if tree.keyin(key, d)]:
         fd = {}
         for ks, x in t.find(key):
             fd[','.join(ks)] = x.value
         #print 'fire', key, fd
         waiters.send(key, fd)
-    # print 'an merge result', _tree
 
     # update
     _tree.merge(d)

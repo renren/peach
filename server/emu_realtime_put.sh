@@ -8,5 +8,5 @@ do
 	t=$(($i * $C))
 	#echo $t
 	head -n $t $FN | tail -n $C | curl -NT - http://10.2.76.28:8000/tornado
-	sleep 1
+	sleep 8
 done

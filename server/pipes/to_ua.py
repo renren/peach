@@ -6,7 +6,7 @@ can_register = True
 
 _os = tree.Tree({'os': {}, 'default_action':'add'})
 _br = tree.Tree({'br': {}, 'default_action':'add'})
-_vd = tree.Tree({'br': {}, 'default_action':'add'})
+_vd = tree.Tree({'vendor': {}, 'default_action':'add'})
 
 def add(t):
     a = t.get('os')
@@ -49,9 +49,11 @@ def result():
     global _os, _br, _vd
     # TODO: ugly ._dict
     x = ('os', _os._dict), ('br', _br._dict), ('vendor', _vd._dict)
+
+    # TODO: ugly copy code
     _os = tree.Tree({'os': {}, 'default_action':'add'})
     _br = tree.Tree({'br': {}, 'default_action':'add'})
-    _vd = tree.Tree({'br': {}, 'default_action':'add'})
+    _vd = tree.Tree({'vendor': {}, 'default_action':'add'})
     return x
 
 def init():
