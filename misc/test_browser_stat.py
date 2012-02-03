@@ -45,7 +45,11 @@ for i in sys.stdin:
 
 """
 Browscap: http://drupal.org/project/browscap
+http://browsers.garykeith.com/stream.asp?PHP_BrowsCapINI
+http://browsers.garykeith.com/stream.asp?BrowsCapXML
+
 wurfl: http://wurfl.sourceforge.net/
+http://wurfl.sourceforge.net/wurfl_download.php
 
 {os: 
     {win: {6: 100},{7:400}},

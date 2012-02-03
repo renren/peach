@@ -51,23 +51,20 @@ def run(f):
 @lazy.memoized
 def pipes():
     _pipes = []
-    #dir = os.path.join(os.path.dirname(__file__), 'pipes')
-    dir = 'pipes'
-    pattern = os.path.join(dir, '*.py')
-    for f in glob.glob(pattern):
-        name,_ =  os.path.splitext(f)
-        name = name.replace('/', '.')
-
-        if name[-1] == '_': continue # remove __init__.py
+    # TODO:  walk all pipes.*.py files and auto import it
+    arr = ['pipes.to_ua']
+    for name in arr:
         try:
-            # print name
-            m = __import__(name, globals())
-        except Exception,e:
-            logging.debug('module %s load failure %r' % (name, e))
+            __import__(name)
+        except ImportError:
+            sys.modules.pop(name, None)
             continue
 
-        _, base = name.split('.')
-        _pipes.append(getattr(m, base))
+        m = sys.modules[name]
+        if m.can_register:
+            _pipes.append(m)
+        else:
+            sys.modules.pop(name, None)
 
     logging.debug('installed pipes: %r', _pipes)
     return _pipes
@@ -75,14 +72,7 @@ def pipes():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    print logging.root.level
-    logging.basicConfig(level=logging.DEBUG)
-    print logging.root.getEffectiveLevel()
-    logging.root.setLevel(logging.DEBUG)
-    print logging.root.getEffectiveLevel()
 
-    logging.debug('installed pipes via init:  %r', pipes())
-    logging.info('installed pipes via init:  %r', pipes())
     """
     _init()
     logging.debug('installed pipes via init:  %r', pipes())

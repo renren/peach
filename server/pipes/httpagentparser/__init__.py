@@ -136,7 +136,7 @@ class Netscape(Browser):
 class MSIE(Browser):
     look_for = "MSIE"
     skip_if_found = ["Opera"]
-    name = "MSIE" #Microsoft Internet Explorer"
+    name = "MSIE"
     version_splitters = [" ", ";"]
 
 
@@ -269,8 +269,9 @@ def detect(agent):
                 detector._suggested_detectors = detectors
         else:
             detectors = _suggested_detectors
+        print info_type, detectors
         for detector in detectors:
-            print "detector name: ", detector.name
+            print "  detector name: ", detector.name
             if detector.detect(agent, result):
                 prefs = detector.prefs
                 _suggested_detectors = detector._suggested_detectors
@@ -281,7 +282,6 @@ def detect(agent):
 class Result(dict):
     def __missing__(self, k):
         return ""
-
 
 def detect(agent):
     result = Result()
@@ -295,7 +295,6 @@ def detect(agent):
                     detector._suggested_detectors = _suggested_detectors
                     break
     return result
-
 
 def simple_detect(agent):
     """

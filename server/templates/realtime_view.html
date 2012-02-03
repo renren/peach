@@ -73,7 +73,6 @@ body {
 					var c = v;
 				}
 
-				console.log(a.length, title.split(',').length);
 				if (a.length >= title.split(',').length + 2)
 		  			var name = a.slice(0, a.length - 1).join(',');
 		  		else
@@ -174,10 +173,10 @@ body {
 
 		    pull();
 
-		    $('a#stop').click(function(){
-		    	stop = !stop;
-		    	$(this).text(stop ? 'continue' : 'stop');
-		    	if (!stop)
+		    $('a#pause').click(function(){
+		    	pause = !pause;
+		    	$(this).text(pause ? 'resume' : 'pause');
+		    	if (!pause)
 		    		pull();
 		    })
 		  });
@@ -209,7 +208,7 @@ body {
 		    s.addPoint([x, y], false, shift);
 		  }
 
-		  var stop = false;
+		  var pause = false;
 		  function pull() {
 		    $.getJSON('/pull/{{key|safe}}', function (data) {
 		    	if (chart_type == 'pie') {
@@ -223,7 +222,7 @@ body {
 	          		chart.redraw();
 	          	}
 		      
-		      	if (!stop)
+		      	if (!pause)
 		        	setTimeout(pull, 1);
 		    });
 		  }
@@ -234,6 +233,6 @@ body {
 		
 		<!-- 3. Add the container -->
 		<div id="container" style="width: 90%; height: 600px; margin: 0 auto"></div>
-		<a id="stop" href="#">pause</a>
+		<a id="pause" href="#">pause</a>
 	</body>
 </html>

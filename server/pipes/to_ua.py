@@ -1,8 +1,12 @@
 import httpagentparser
+import vendor
 import tree
+
+can_register = True
 
 _os = tree.Tree({'os': {}, 'default_action':'add'})
 _br = tree.Tree({'br': {}, 'default_action':'add'})
+_vd = tree.Tree({'br': {}, 'default_action':'add'})
 
 def add(t):
     a = t.get('os')
@@ -17,6 +21,11 @@ def add(t):
     if a: 
         d = {a['name'] : {a['version']:1}}
         _br.merge({'br' : d})
+
+    a = t.get('vendor')
+    if a: 
+        d = {a['name'] : {a['version']:1}}
+        _vd.merge({'vendor' : d})
 
 _default_index = None
 
@@ -37,11 +46,12 @@ def process(arr):
         add(t)
 
 def result():
-    global _os, _br
+    global _os, _br, _vd
     # TODO: ugly ._dict
-    x = ('os', _os._dict), ('br', _br._dict)
+    x = ('os', _os._dict), ('br', _br._dict), ('vendor', _vd._dict)
     _os = tree.Tree({'os': {}, 'default_action':'add'})
     _br = tree.Tree({'br': {}, 'default_action':'add'})
+    _vd = tree.Tree({'br': {}, 'default_action':'add'})
     return x
 
 def init():
@@ -51,8 +61,14 @@ def init():
 
 
 """
+TODO: use more generic data
 Browscap: http://drupal.org/project/browscap
+http://browsers.garykeith.com/stream.asp?PHP_BrowsCapINI
+http://browsers.garykeith.com/stream.asp?BrowsCapXML
+
 wurfl: http://wurfl.sourceforge.net/
+http://wurfl.sourceforge.net/wurfl_download.php
+
 
 {os: 
     {win: {6: 100},{7:400}},
