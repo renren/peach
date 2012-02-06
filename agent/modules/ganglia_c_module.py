@@ -178,28 +178,22 @@ class mmodule(ctypes.Structure):
     def __repr__(self):
         return '<mmodule> %s %r' % (self.name, self.metrics_info.contents)
 
-    def build_metric_list(self):
-        cbs = []
-        i = 0
-        while True:
-            cbs.append((i, self.metrics_info[i], self.handler))
-
-            i += 1
-            if not self.metrics_info[i].name:
-                break
-        return cbs
+    def metric(self, i):
+        assert self.metrics_info[i].name
+        return (self.metrics_info[i], self.handler)
 
     def __len__(self):
-        if not hasattr(self, '_ml'):
-            setattr(self, '_ml', self.build_metric_list())
-        return len(self._ml)
+        i = 0
+        while self.metrics_info[i].name:
+            i += 1
+        return i
 
     def run(self, index):
-        if not hasattr(self, '_ml'):
-            setattr(self, '_ml', self.build_metric_list())
+        #if not hasattr(self, '_ml'):
+        #    setattr(self, '_ml', self.build_metric_list())
 
-        i, info, handler = self._ml[index]
-        r = handler(i)
+        info, handler = self.metric(index)
+        r = handler(index)
         #return info.name, info.fmt % r.raw(info.type)
         
         return info.name,  r.raw(info.type, info.fmt)
@@ -265,7 +259,7 @@ class GangliaModule(object):
             if bits == '64bit': # hack
                 path = '/usr/lib64/ganglia'
             elif bits == '32bit':
-                path = 'gmod32'
+                path = 'modules/gmod32'
         for name, so in self.DEFAULT_MODS.iteritems():
             try:
                 mod = ctypes.cdll.LoadLibrary(os.path.join(path, so))
@@ -274,7 +268,7 @@ class GangliaModule(object):
                 continue
             mm = mmodule.in_dll(mod, name)
 
-            #ret = mm.init(global_pool())
+            ret = mm.init(global_pool())
             #assert ret == 0
             self.mods.append(mm)
 
@@ -285,8 +279,8 @@ class GangliaModule(object):
         return x
 
     def run_module(self, mm):
-        ret = mm.init(global_pool())
-        assert ret == 0
+        #ret = mm.init(global_pool())
+        #assert ret == 0
     
         i = 0
         x = {}
@@ -297,7 +291,7 @@ class GangliaModule(object):
 
             i += 1
 
-        mm.cleanup()
+        #mm.cleanup()
 
         def filename_to_name(fn):
             return fn[1+fn.find('_'):fn.find('.')]

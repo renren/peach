@@ -3,21 +3,32 @@ import json
 import urllib2, urllib
 
 import modules.ganglia_c_module
+import modules.lazy
+
+@modules.lazy.memoized
+def cached():
+    return PythonModule(), modules.ganglia_c_module.GangliaModule()
+
+push_count = 0
 
 def push_once(url):
-    tree = PythonModule().run()
+    mpy, mc = cached()
 
-    gm = modules.ganglia_c_module.GangliaModule()
-    tree.update(gm.run())
+    #tree = mpy.run()
+    #tree.update(mc.run())
+    tree = mc.run()
+
+    global push_count
+    push_count += 1
+    if push_count % 100 ==0:
+    #    tree.update(dump())
+        import gc
+        gc.collect()
 
     s = json.dumps({'127.0.0.1': tree})
     s = urllib.urlencode({"json": s})
     f = urllib2.urlopen(url, s)
     f.read()
-
-def register(f):
-    pass
-
 
 class PythonModule():
     def __init__(self):
@@ -31,9 +42,11 @@ class PythonModule():
             name,_ =  os.path.splitext(f)
             name = name.replace('/', '.')
             try:
-                m = __import__(name, globals())
-            except Exception,e:
-                logging.debug('module %s load failure %r' % (name, e))
+                m = __import__(name)
+                if not m.metric_init:
+                    sys.modules.pop(name, None)
+            except:
+                logging.exception('module %s load failure' % m)
                 continue
 
             _, base = name.split('.')
@@ -49,9 +62,47 @@ class PythonModule():
                     name = d['name']
                     r = d['call_back'](name)
                     tree.setdefault(name, float(d['format'] % r))
-            except Exception,e:
-                logging.debug('run module %r failed %r' % (m,e))
+            except:
+                logging.exception('run module %r' % m)
         return tree
+
+def mid(t, a, b):
+    """
+    >>> mid('abc', 'a', 'b')
+    ''
+    >>> mid('abcde', 'b', 'd')
+    'c'
+    >>> mid('abcde', 'a', 'd')
+    'bc'
+    >>> mid('abc', 'a', 'c')
+    'b'
+    >>> mid('ab', 'a', 'b')
+    ''
+    >>> mid('ab', 'a', 'd')
+    >>> mid('ab', 'c', 'd')
+    """
+    ia = t.find(a)
+    if -1 != ia:
+        ia += len(a)
+        ib = t.find(b, ia)
+        if -1 != ib:
+            return t[ia : ib]
+    return None
+
+
+def dump():
+    import gc
+    a = gc.get_objects()
+    t = {}
+
+    for i in a:
+        n = '%r' % type(i)
+        n = mid(n, '\'', '\'')
+        if n in t:
+            t[n] += 1
+        else:
+            t[n] = 1
+    return {'gc': t}
 
 def main():
     import sys
@@ -60,10 +111,11 @@ def main():
         url = sys.argv[1]
     else:
         url = 'http://127.0.0.1/push'
+
     while True:
         start = time.time()
         push_once(url)
-        time.sleep(max(1, (1 - time.time() + start)))
+        #time.sleep(max(1, (1 - time.time() + start)))
 
 if __name__ == '__main__':
     # --push
