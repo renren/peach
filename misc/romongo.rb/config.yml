@@ -1,0 +1,32 @@
+romongo: # log server
+  agent:
+    host: 0.0.0.0
+    port: 8080
+
+mongo: # backend mongodb
+  host: 10.3.18.197
+  port: 27017
+  db: ruby_ev_test
+  collection: coll_table
+
+browser:
+  core:
+    key: _core
+    members:
+      - ie
+      - webkit
+      - gecko
+      - presto
+  shell:
+    key: _shell
+    members:
+      - ieshell
+      - se360
+      - sogou
+      - maxthon
+      - chrome
+      - safari
+      - firefox
+      - qqbrowser
+      - opera
+      - theworld
