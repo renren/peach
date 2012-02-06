@@ -269,8 +269,12 @@ class GangliaModule(object):
             mm = mmodule.in_dll(mod, name)
 
             ret = mm.init(global_pool())
-            #assert ret == 0
+            assert ret == 0
             self.mods.append(mm)
+
+    def __del__(self):
+        for mm in self.mods:
+            mm.cleanup()
 
     def run(self):
         x = {}
@@ -279,9 +283,6 @@ class GangliaModule(object):
         return x
 
     def run_module(self, mm):
-        #ret = mm.init(global_pool())
-        #assert ret == 0
-    
         i = 0
         x = {}
         while not not mm.metrics_info[i].name:
@@ -290,8 +291,6 @@ class GangliaModule(object):
             x[name] = val
 
             i += 1
-
-        #mm.cleanup()
 
         def filename_to_name(fn):
             return fn[1+fn.find('_'):fn.find('.')]

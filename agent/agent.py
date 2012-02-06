@@ -14,16 +14,11 @@ push_count = 0
 def push_once(url):
     mpy, mc = cached()
 
-    #tree = mpy.run()
-    #tree.update(mc.run())
-    tree = mc.run()
+    tree = mpy.run()
+    tree.update(mc.run())
 
     global push_count
     push_count += 1
-    if push_count % 100 ==0:
-    #    tree.update(dump())
-        import gc
-        gc.collect()
 
     s = json.dumps({'127.0.0.1': tree})
     s = urllib.urlencode({"json": s})
@@ -115,7 +110,7 @@ def main():
     while True:
         start = time.time()
         push_once(url)
-        #time.sleep(max(1, (1 - time.time() + start)))
+        time.sleep(max(1, (1 - time.time() + start)))
 
 if __name__ == '__main__':
     # --push
