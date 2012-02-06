@@ -6,8 +6,8 @@ romongo: # log server
 mongo: # backend mongodb
   host: 10.3.18.197
   port: 27017
-  db: ruby_ev_test
-  collection: coll_table
+  db: beacon_sys
+  collection: user_browser_logs
 
 browser:
   core:
