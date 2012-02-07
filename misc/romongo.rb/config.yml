@@ -12,6 +12,7 @@ mongo: # backend mongodb
 browser:
   core:
     key: _core
+    ver_key: _core_ver
     members:
       - ie
       - webkit
@@ -19,8 +20,8 @@ browser:
       - presto
   shell:
     key: _shell
+    ver_key: _shell_ver
     members:
-      - ieshell
       - se360
       - sogou
       - maxthon
