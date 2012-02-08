@@ -1,7 +1,7 @@
 romongo: # log server
   agent:
     host: 0.0.0.0
-    port: 8080
+    port: 8081
 
 mongo: # backend mongodb
   host: 10.3.18.197
