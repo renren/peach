@@ -55,7 +55,7 @@ module Romongo
 		def post_init
 			super
 
-			@db = Mongo::Connection.new(MONGO_HOST, MONGO_PORT).db(MONGO_DB)
+			@db = Mongo::Connection.new(MONGO_HOST, MONGO_PORT, :pool_size => 50, :pool_timeout => 5).db(MONGO_DB)
 			@cl = @db.collection(MONGO_COLLECTION)
 		end
 
