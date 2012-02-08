@@ -27,6 +27,31 @@ RomongoTask
 --------------
 
 $reduce task for browsers stat
+
+for _core,_core_ver,_shell,_shell_ver,
+we have:
+# _core,_shell
+# _shell,_shell_ver
+
+still to work for:
+* _core,_core_ver
+* _shell,_core
+
+
+for oscore,os_ver,os_dist,os_dist_ver,
+we have:
+
+still need work for:
+* oscore,os_ver
+* osdist,os_dist_ver
+
+for res_width,res_height,is_mobile,orientation,
+we have:
+
+still need work for:
+* res_width+res_height 
+* is_mobile,orientation
+
 <pre>
 use beacon_sys
 
