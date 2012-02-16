@@ -1,0 +1,33 @@
+romongo: # log server
+  agent:
+    host: 0.0.0.0
+    port: 8081
+
+mongo: # backend mongodb
+  host: 10.3.18.197
+  port: 27017
+  db: beacon_sys
+  collection: user_browser_logs
+
+browser:
+  core:
+    key: _core
+    ver_key: _core_ver
+    members:
+      - ie
+      - webkit
+      - gecko
+      - presto
+  shell:
+    key: _shell
+    ver_key: _shell_ver
+    members:
+      - se360
+      - sogou
+      - maxthon
+      - chrome
+      - safari
+      - firefox
+      - qqbrowser
+      - opera
+      - theworld

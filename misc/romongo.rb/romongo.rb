@@ -3,35 +3,60 @@
 require 'eventmachine'
 require 'evma_httpserver'
 require 'mongo'
+require 'yaml'
+
 
 module Romongo
+	# Constants
+	CONFIG = YAML.load_file(File.expand_path("./config.yml", File.dirname(__FILE__)))
+
+	BR_CORE_KEY  = CONFIG['browser']['core']['key']
+	BR_CORE_VER_KEY  = CONFIG['browser']['core']['ver_key']
+	BR_CORE_MEMBERS  = CONFIG['browser']['core']['members']
+	BR_SHELL_KEY = CONFIG['browser']['shell']['key']
+	BR_SHELL_VER_KEY = CONFIG['browser']['shell']['ver_key']
+	BR_SHELL_MEMBERS = CONFIG['browser']['shell']['members']
+
+	MONGO_HOST =  CONFIG['mongo']['host']
+	MONGO_PORT =  CONFIG['mongo']['port']
+	MONGO_DB =  CONFIG['mongo']['db']
+	MONGO_COLLECTION =  CONFIG['mongo']['collection']
+
+	# Basic functions
 	module Base
 		def parse_qs(query_string)
 			params = {}
 			query_string.split("&").each do |one_qs|
 				key, value = one_qs.split("=", 2)
 
-				if(['ie', 'webkit', 'gecko', 'presto'].include? key)
-					params['_core'] = key
+				if(BR_CORE_MEMBERS.include? key)
+					params[BR_CORE_KEY] = key
+					params[BR_CORE_VER_KEY] = value
 				end
-				if(['ieshell', 'se360', 'sogou', 'maxthon', 'chrome', 'safari', 'firefox', 'qqbrowser', 'opera', 'theworld'].include? key)
-					params['_shell'] = key
-					params['_shell'] = "#{key}#{value}" if 'ieshell' == key
+				if(BR_SHELL_MEMBERS.include? key)
+					params[BR_SHELL_KEY] = key
+					params[BR_SHELL_VER_KEY] = value
+				end
+				if 'ieshell' == key and !params[BR_SHELL_KEY]
+					params[BR_SHELL_KEY] = key
+					params[BR_SHELL_VER_KEY] = value
 				end
 				params[key] = value if key
 				# TODO: key with '.'
 			end
+			params['time'] = Time.now
 
 			return params
 		end
 	end
 
+	# Agent actions
 	module Agent
 		def post_init
 			super
 
-			@db = Mongo::Connection.new("10.3.18.197", 27017).db("ruby_ev_test")
-			@cl = @db.collection("coll_table")
+			@db = Mongo::Connection.new(MONGO_HOST, MONGO_PORT, :pool_size => 50, :pool_timeout => 5).db(MONGO_DB)
+			@cl = @db.collection(MONGO_COLLECTION)
 		end
 
 		def process_http_request
@@ -68,6 +93,15 @@ class RomongoAgent < EM::Connection
 	end
 end
 
-EM.run{
-	EM.start_server '0.0.0.0', 8080, RomongoAgent
-}
+
+if __FILE__ == $0
+
+	cf = YAML.load_file(File.expand_path("./config.yml", File.dirname(__FILE__)))
+	host = cf['romongo']['agent']['host']
+	port = cf['romongo']['agent']['port']
+
+	EM.run{
+		EM.start_server host, port, RomongoAgent
+	}
+
+end
