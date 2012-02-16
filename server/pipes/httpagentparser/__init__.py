@@ -10,7 +10,7 @@ Aim is
 import sys
 
 class DetectorsHub(dict):
-    _known_types = ['os', 'dist', 'flavor', 'browser']
+    _known_types = ['os', 'dist', 'flavor', 'engine', 'browser']
 
     def __init__(self, *args, **kw):
         dict.__init__(self, *args, **kw)
@@ -99,6 +99,13 @@ class Flavor(DetectorBase):
     can_register = False
 
 
+class Engine(DetectorBase):
+    info_type = "engine"
+    can_register = False
+
+    #def getVersion(self, agent):
+    #    return agent.split(self.look_for + self.version_splitters[0])[-1].split(self.version_splitters[1])[0].strip()
+
 class Browser(DetectorBase):
     info_type = "browser"
     can_register = False
@@ -110,15 +117,32 @@ class Macintosh(OS):
 
     def getVersion(self, agent): pass
 
+# TODO: engine as AppleWebkit/MSIE/Presto/Gecko
+class Gecko(Engine):
+    skip_if_found = ['like']
+    look_for = "Gecko"
+    name = "gecko"
+
+class Presto(Engine):
+    look_for = "Presto"
+    name = "presto"
+
+class Trident(Engine):
+    look_for = "MSIE"
+    skip_if_found = ["Opera"]
+    name = "trident"
+    version_splitters = [" ", ";"]
+
+class Webkit(Engine):
+    look_for = "AppleWebKit"
+    name = "webkit"
 
 class Firefox(Browser):
     look_for = "Firefox"
 
-
 class Konqueror(Browser):
     look_for = "Konqueror"
     version_splitters = ["/", ";"]
-
 
 class Opera(Browser):
     look_for = "Opera"

@@ -52,7 +52,7 @@ def run(f):
 def pipes():
     _pipes = []
     # TODO:  walk all pipes.*.py files and auto import it
-    arr = ['pipes.to_ua']
+    arr = ['pipes.to_ua', 'pipes.time']
     for name in arr:
         try:
             __import__(name)
@@ -72,21 +72,6 @@ def pipes():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-
-    """
-    _init()
-    logging.debug('installed pipes via init:  %r', pipes())
-
-    
-
-    name = '/data/nginx/logs/access.log'
-    if len(sys.argv) > 1:
-        name = sys.argv[1]
-    f = open(name, 'rb')
-    run(f)
-
-    print 'result:\n', core._tree
-    """
 
     format = r'%t %>s %h %ua %ub %uc %v %vu %m %mu %mv %b \"%{Referer}i\" \"%{User-Agent}i\" \"{Forward}\"'
 
@@ -113,4 +98,6 @@ if __name__ == '__main__':
 
     run(f)
 
-    print 'result:\n', core._tree
+    print 'result:\n',
+    import pprint
+    pprint.pprint(core._tree)

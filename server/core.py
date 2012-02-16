@@ -1,8 +1,20 @@
+"""
+>>> def p(v):
+...    print 'callback got:', v
+>>> waiters.connect('foo,bar', p)
+>>> update({'foo':{'bar':3}})
+callback got: {'foo,bar': 3}
+>>> waiters.disconnect('foo,bar', p)
+>>> update({'foo':{'bar':4}})
+>>> _tree
+{'foo': {'bar': [3, 4]}}
+"""
+
 import logging
 from tornado import stack_context
 import tree
 
-# 
+"""like pydispatcher, this is more simple"""
 class Dispatcher(object):
     """
     >>> def f(x): print x
@@ -37,35 +49,35 @@ class Dispatcher(object):
 
     def send(self, signal, value):
         try:
+            # pop them is expensive
             cs = self._signals.pop(signal)
         except:
-            # TODO: log
-            logging.exception('pop')
+            logging.exception('send pop failed')
             return
         
         for callback in cs:
             try:
                 callback(value)
             except:
-                # TODO: log?
                 logging.exception('send callback')
                 continue
 
 
 # TODO: once
-_tree = tree.Tree()
+_tree = {}
 waiters = Dispatcher()
 
 def update(d):
-    # fire first
-    t = tree.Tree(d)
-    #print 'live', waiters.live_signals
-    for key in [key for key in waiters.live_signals if tree.keyin(key, d)]:
+    lived = [key for key in waiters.live_signals if tree.keyin(key, d)]
+    #print 'live', waiters.live_signals, lived
+    for key in lived:
         fd = {}
-        for ks, x in t.find(key):
-            fd[','.join(ks)] = x.value
+        for ks, x in tree.query(d, key):
+            fd[','.join(ks)] = x
         #print 'fire', key, fd
         waiters.send(key, fd)
 
     # update
-    _tree.merge(d)
+    #print 'update:', d
+    tree.merge(_tree, d)
+

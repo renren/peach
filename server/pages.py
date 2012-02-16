@@ -51,17 +51,13 @@ def as_dict(o):
 @app.route('/all')
 def all():
     #return jsonify(app.tree._dict)
-    return Response(json.dumps(app.tree._dict, default=as_dict,indent=None if request.is_xhr else 2), mimetype='application/json')
+    return Response(json.dumps(app.tree,indent=None if request.is_xhr else 2), mimetype='application/json')
     
 
 def getmatch(key):
     d = []
-    for ks, item in app.tree.find(key):
-        if isinstance(item, tree.Item):
-            v = item.value
-        else:
-            v = item
-        d.append((','.join(ks), v))
+    for ks, item in tree.query(app.tree, key):
+        d.append((','.join(ks), item))
 
     d.sort(key=lambda x: x[0])
     return d

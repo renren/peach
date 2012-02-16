@@ -1,185 +1,57 @@
 """
-This is the Core of the entire system. 
+merge 2 dict
+Examples:
 
-Tree always initialize from a `dict`. Can be merge/find from dict.
+>>> merge({'ip1': {'cpu': 0.2}}, {'ip1': {'cpu': 0.4}})
+{'ip1': {'cpu': [0.2, 0.4]}}
+
+>>> merge({'ip1': {'cpu': 0.2}}, a=3,b=3)
+{'a': 3, 'ip1': {'cpu': 0.2}, 'b': 3}
+
+>>> merge({'ip1': {'cpu': 0.2}}, {'ip1': {'net': 10}})
+{'ip1': {'net': 10, 'cpu': 0.2}}
+
+query dict by pattern
+Examples:
+
+>>> d = {'ip1': { 'cpu': 0.2, 'net':120 },
+...     'ip2': { 'cpu': 0.3, 'net':10 },
+...     'ip3': { 'cpu0': 0.3, 'cpu1':0.6 },
+...     'arr': [0.3,0.6]},
+...     }
+
+>>> list(query(d, 'ip1,net'))
+[(['ip1', 'net'], 120)]
+
+>>> for i in query(d, 'ip*,cpu'): print i
+(['ip2', 'cpu'], 0.3)
+(['ip1', 'cpu'], 0.2)
+
+>>> for i in query(d, 'ip*,cpu*'): print i
+(['ip2', 'cpu'], 0.3)
+(['ip3', 'cpu0'], 0.3)
+(['ip3', 'cpu1'], 0.6)
+(['ip1', 'cpu'], 0.2)
+
+>>> for i in query(d, 'ip*|list,cpu*|avg'): print i
+(['ip2', 'cpu*'], 0.3)
+(['ip3', 'cpu*'], 0.45)
+(['ip1', 'cpu*'], 0.2)
+
+>>> for i in query(d, '*|sum,net'): print i
+(['*'], 130.0)
+
+>>> for i in query(d, '*|avg,net'): print i
+(['*'], 65.0)
+
+>>> for i in query(d, 'ip*|avg,cpu*|avg'): print i
+(['ip*'], 0.31666666666666665)
 """
 
-import sys
-
-class Tree(object):
-    """
-    >>> Tree({1:0})
-    {1: <Item('0')>}
-    >>> Tree()
-    {}
-
-    >>> a = {'cpu': {'10.3.1.12': {'idle':  0.32,
-    ...                   'sytem': 0.29,
-    ...                   'user': 1,
-    ...                   'marker': 'sth. wrong happened'}},
-    ...      'default_action': 'average'}
-    >>> Tree(a)
-    {'cpu': {'10.3.1.12': {'idle': <Item('0.32')>, 'sytem': <Item('0.29')>, 'user': <Item('1')>}}}
-
-    >>> t = Tree(a)
-    >>> for ks, v in t.find('cpu,,user'): print ks, v
-    ['cpu', '10.3.1.12', 'user'] <Item('1')>
-    """
-    def __init__(self, d=None):
-        if d is None:
-            self._dict = {}
-            self.action = _average
-        else:
-            action_name = d.get('default_action', 'average')
-            self.action = _action_from_name(action_name)
-            self._dict = evolve(d, self.action)
-
-    def merge(self, d):
-        self._dict = merge(self._dict, d, self.action)
-
-    def find(self, name):
-        # right, same as right
-        name= name.rstrip(',')
-
-        for ks, x in find_pattern(self._dict, name):
-            yield ks, x
-
-    def __repr__(self):
-        return self._dict.__repr__()
-
-class Item(object):
-    def __init__(self, value=None, action=None):
-        self.value = value
-        self.action = action # sum, average, ...
-
-    def __repr__(self):
-        return "<Item(%r)>" % repr(self.value)
-
-    def __add__(self, b):
-        # use b's action
-        return Item(b.action(self, b), b.action)
-
-#if sys.version_info.major > 2 or (sys.version_info.major == 2 and sys.version_info.minor > 5):
-    def __iadd__(self, b):
-        #print 'iadd', self.value, b.value, b.action(self, b)
-        self.value = b.action(self, b)
-        return self
-
-def _average(a,b):
-    try:
-        getattr(a, 'sum')
-    except AttributeError:
-        setattr(a, 'sum', a.value)
-        setattr(a, 'count', 1)
-    a.sum += b.value
-    a.count += 1
-    return float(a.sum)/a.count
-
-def _add(a,b):
-    #print 'add', a, b, a.value + b.value
-    return a.value + b.value
-
-def _action_from_name(name):
-    m = {'add': _add,
-        'average': _average}
-    return m[name]
-
-def evolve(d, default_action=_add):
-    """
-    Convert a normal dict to Tree like dict with memeber as Item.
-
-    >>> evolve({1:2})
-    {1: <Item('2')>}
-    >>> evolve({1: Item(2)})
-    {1: <Item('2')>}
-
-    >>> d = evolve({1: {2: 3}}, _add)
-    >>> d[1][2].action == _add
-    True
-    """
-    rd = {}
-    for k,v in d.iteritems():
-        if isinstance(v, Item):
-            rd[k] = v
-        elif isinstance(v, (int, long, float)):
-            #print default_action
-            rd[k] = Item(v, default_action)
-        elif isinstance(v, dict):
-            rd[k] = evolve(v, default_action)
-    return rd
-
-def merge(d1, d2, default_action=None):
-    """
-    >>> merge({1: Item(1,_add)}, {3: Item(1,_add)})
-    {1: <Item('1')>, 3: <Item('1')>}
-    >>> merge({1: Item(1,_add)}, {1: 2})
-    {1: <Item('1.5')>}
-    >>> merge({1: Item(1,_add)}, {1: 2}, _add)
-    {1: <Item('3')>}
-
-    >>> merge({1: {2:Item(3, _add)}}, {1:{2:4}}, _add)
-    {1: {2: <Item('7')>}}
-
-    >>> merge({1: {2:Item(3, _add)}}, {1:4})
-    {1: {'count': <Item('4')>, 2: <Item('3')>}}
-
-    >>> merge({1:Item(4, _add)}, {1: {2: {3:5}}})
-    {1: {'count': <Item('4')>, 2: {3: 5}}}
-
-    >>> da = merge({1:{}}, {'default_action':'average',1: {2: {3:5}}})
-    >>> da
-    {1: {2: {3: 5}}, 'default_action': 'average'}
-
-    >>> merge(Tree({1:3}), Tree({1:2}))
-    {1: <Item('2.5')>}
-
-    >>> merge({'os': {}, 'default_action':'add'}, {'os' : {'Windows': {'NT 5.1': 1, 'NT 6.1':2}}})
-    {'default_action': 'add', 'os': {'Windows': {'NT 5.1': 1, 'NT 6.1': 2}}}
-    >>> merge({'os': {'Windows': {'NT 5.1': 2, 'NT 6.1':4}}, 'default_action':'add'}, {'os' : {'Windows': {'NT 5.1': 1, 'NT 6.1':2}}})
-    {'default_action': 'add', 'os': {'Windows': {'NT 5.1': <Item('3')>, 'NT 6.1': <Item('6')>}}}
-    
-    # TDOO: merge result action missing
-    """
-    if default_action is None:
-        if isinstance(d2, dict) and 'default_action' in d2:
-            default_action = _action_from_name(d2['default_action'])
-        elif isinstance(d1, dict) and 'default_action' in d1:
-            default_action = _action_from_name(d1['default_action'])
-        else:
-            default_action = _average
-
-    if isinstance(d2, Tree):
-        d2 = d2._dict
-
-    if isinstance(d1, Tree):
-        d1 = d1._dict
-
-    for k,v2 in d2.iteritems():
-        if k not in d1:
-            d1[k] = v2
-        else:
-            v1 = d1[k]
-            if isinstance(v1, Item) and isinstance(v2, (Item)):
-                #d1[k] = v1 + v2
-                v1 += v2
-            elif isinstance(v1, Item) and isinstance(v2, (int, long, float)):
-                v1 += Item(v2, default_action)
-            elif isinstance(v1, dict) and isinstance(v2, dict):
-                d1[k] = merge(v1, v2, default_action)
-            elif isinstance(v1, dict) and isinstance(v2, Item):
-                v1['count'] = v2
-            elif isinstance(v1, dict) and isinstance(v2, (int, long, float)):
-                v1['count'] = Item(v2, default_action)
-            elif isinstance(v1, Item) and isinstance(v2, dict):
-                v2.update({'count':v1})
-                d1[k] = v2
-            elif isinstance(v1, (int, long, float)) and isinstance(v2, (int, long, float)):
-                d1[k] = Item(v1, default_action) + Item(v2, default_action)
-            elif isinstance(v1, (int, long, float)) and isinstance(v2, Item):
-                d1[k] = Item(v1, default_action) + v2
-            else:
-                assert False, 'merge unespected type k: %r v1: %r[%r] v2: %r[%r]' % (k, v1, type(v1), v2, type(v2))
-    return d1
+import copy
+import operator
+import fnmatch
+import math, decimal
 
 def keyin(key, d):
     arr = key.split(',')
@@ -190,87 +62,195 @@ def keyin(key, d):
             return False
     return True
 
-def match(a, b):
-    """
-    >>> match([], [])
-    True
-    >>> match([1], [1])
-    True
-    >>> match([1], [''])
-    True
-
-    >>> match(['1','2'], ['1'])
-    True
-    >>> match(['1','2'], [''])
-    True
-
-    >>> match(['1','2'], ['3'])
-    False
-    >>> match(['1'], ['3'])
-    False
-    >>> match(['1','2'], ['','1'])
-    False
-
-    >>> match(['1','2'], ['','2'])
-    True
-    >>> match(['1','2','3'], ['','2'])
-    True
-
-    >>> match(['1'], ['', '', '6'])
-    False
-    """
-
-    if len(b) > len(a):
-        return False
-
-    for i, xa in enumerate(a):
-        if i < len(b):
-            xb = b[i]
-            if xb and xb != xa:
-                return False
+def _loop_by(d1, d2):
+    assert isinstance(d2, dict)
+    for k,v2 in d2.iteritems():
+        if not isinstance(v2, dict):
+            yield (k in d1), d1, d2, k, v2
         else:
-            break
+            v1 = d1.get(k)
 
-    return True
+            if v1 is None:
+                yield False, d1, d2, k, v2
+                continue
+            
+            for t in _loop_by(v1, v2):
+                yield t
 
-def find_pattern(d, pattern):
+def merge(d, *args, **kwargs):
+    """ merge 2 dict, return the first
     """
-    Find all matched Items.
+    if len(kwargs) ==0 and len(args) and isinstance(args[0], dict):
+        kwargs = args[0]
+    for keyin, d1,d2,key,v2 in _loop_by(d, kwargs):
+        #print keyin, key,v2
+        #print '|'.join([repr(x) for x in [keyin, d1,d2,key,v2]])
+        
+        if keyin:
+            v1 = d1[key]
+            if not isinstance(v1, list):
+                v1 = [v1]
+            assert isinstance(v2, (int, float)), (key,v2,d2)
+            v1.append(v2)
+            d1[key] = v1
+        else:
+            d1[key] = copy.deepcopy(v2)
+    return d
 
-    >>> d = {'1': Item(1, _add), '2': Item(2, _add), '3': {'4':{'6':Item(6, _add)}, '5':Item(5, _add)}}
-    >>> [x for ks,x in find_pattern(d, '')]
-    [<Item('1')>, <Item('5')>, <Item('6')>, <Item('2')>]
-    >>> [x for ks,x in find_pattern(d, '1,2')]
-    []
-    >>> [x for ks,x in find_pattern(d, '3,4')]
-    [<Item('6')>]
-    
-    >>> [x for ks,x in find_pattern(d, '3')]
-    [<Item('5')>, <Item('6')>]
-
-    >>> [x for ks,x in find_pattern(d, ',3')]
-    []
-    >>> [x for ks,x in find_pattern(d, ',4')]
-    [<Item('6')>]
-
-    >>> [x for ks,x in find_pattern(d, ',,6')]
-    [<Item('6')>]
+def add(d, *args, **kwargs):
+    """ TODO: code same as merge
     """
+    if len(kwargs) ==0 and len(args) and isinstance(args[0], dict):
+        kwargs = args[0]
+    for keyin, d1,d2,key,v2 in _loop_by(d, kwargs):
+        if keyin:
+            v1 = d1[key]
+            assert isinstance(v2, (int, float)), (key,v2)
+            assert isinstance(v1, (int, float)), (key,v1)
+            v1 += v2
+            d1[key] = v1
+        else:
+            d1[key] = copy.deepcopy(v2)
+    return d
 
-    arr = pattern.split(',')
+def match(s, pat):
+    return fnmatch.fnmatchcase(s, pat)
 
-    # deep first traversal
-    def dfs(d, ks):
-        for k, v in d.iteritems():
-            deep_ks = ks + [k]
-            if isinstance(v, dict):
-                for x in dfs(v, deep_ks):
-                    yield x
-            elif isinstance(v, (Item, int, long, float)):
-                yield (v, deep_ks)
+def expand(d, keys=None, sep=','):
+    """iterator all dict item, recursively
+
+    >>> list(expand({'a':2}))
+    [('a', 2)]
+    >>> list(expand({'1':2},['a']))
+    [('a,1', 2)]
+    >>> list(expand({'1':2, '2':{'3':5}},['a']))
+    [('a,1', 2), ('a,2,3', 5)]
+    """
+    if keys is None:
+        keys = []
+
+    if not isinstance(d, dict):
+        yield sep.join(keys), d
+    else:
+        for k,v in d.iteritems():
+            keys.append(k)
+            for t in expand(v, keys, sep):
+                yield t
+            keys.pop()
+        
+def loop(d):
+    """recursively iterate item of dict"""
+    assert isinstance(d, dict)
+    for k,v in d.iteritems():
+        if not isinstance(v, dict):
+            yield [k], v
+        else:
+            for t in loop(v):
+                ks = [k]
+                ks.extend(t[0])
+                yield ks, t[1]
+
+def proc_by_name(name, iter):
+    return sum(iter)
+
+def _avg(iter):
+    a = sum(iter)
+    c = decimal.Decimal(str(a)) / len(iter)
+    return float(c)
+
+def _query(d, pats):
+    if isinstance(pats, str):  pats = [pats]
+    if not isinstance(pats, (list, tuple)): 
+        assert False, ('unexpected type', type(pats))
+        
+    last_i = len(pats) - 1
+
+    sub_dict = d
+    for i, (pat, action) in enumerate(pats):
+        if '*' in pat or '?' in pat:
+            ret = []
+            def gather(t1, t2): 
+                ret.append((t1,t2))
+            for k,v in sub_dict.iteritems():
+                if match(k, pat):
+                    if not isinstance(v, dict):
+                        # yield [k], v
+                        gather([k], v)
+                    for t in _query(v, pats[i+1:]):
+                        ks = [k]
+                        ks.extend(t[0])
+                        # yield ks, t[1]
+                        gather(ks, t[1])
+            if ret:
+                if action is not None and action != 'list':
+                    get1 = operator.itemgetter(1)
+                    a = math.fsum(map(get1, ret))
+                    if action == 'avg':
+                        #print 'avg:', ret, a, '/', len(ret)
+                        a = decimal.Decimal(str(a)) / len(ret)
+                        a = float(a)
+                    yield [pat], a
+                else:
+                    for t in ret:
+                        yield t
+        else:
+            sub_dict = sub_dict.get(pat)
+            if sub_dict is None: return
+
+            if not isinstance(sub_dict, dict):
+                yield [pat], sub_dict
+                return
             else:
-                assert False, 'dfs unespected type k: %r v: %r' % (k, v)
+                if last_i == i:
+                    y = loop(sub_dict)
+                else:
+                    y = _query(sub_dict, pats[i+1:])
 
-    for v, ks in dfs(d, []):
-        if match(ks, arr):
-            yield ks, v
+                for t in y:
+                    ks = [pat]
+                    ks.extend(t[0])
+                    yield ks, t[1]
+        return
+
+def query(d, s):
+    pat_action_list = []
+    for i in s.split(','):
+        if '|' in i:
+            pat, action = i.split('|')
+        else:
+            pat, action = i, None
+        pat_action_list.append((pat, action))
+
+    for t in _query(d, pat_action_list):
+        yield t
+
+if __name__ == '__main__':
+    import pprint
+    d = {'ip1': { 'cpu': 0.2, 'net':120 }, \
+         'ip2': { 'cpu': 0.3, 'net':10 }, \
+         'ip3': { 'cpu0': 0.3, 'cpu1':0.6 }, \
+         'foo': 3, \
+         'a' : {'b' : {'c' : {'d':42}}} \
+        }
+    pprint.pprint(d)
+    print 'loop(d)'
+    for i in loop(d): print i
+
+    cases = ['ip1,cpu',
+             'ip2,cpu',
+             'ip1,net',
+             'ip1',
+             'a',
+             'ip*,cpu',
+             '*1,net*',
+             '?p?,net*',
+             'ip*,net*',
+             'ip*,cpu*',
+             'ip*|list,cpu*|avg',
+        ]
+
+    for c in cases:
+        print c, ' ' * 4, list(query(d, c))
+
+    assert 7 == proc_by_name('', [1,2,4])    
+    assert 0.45 == _avg([0.3,0.6])

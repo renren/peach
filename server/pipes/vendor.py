@@ -1,4 +1,4 @@
-from httpagentparser import DetectorsHub, DetectorBase, detect, detectorshub
+from httpagentparser import DetectorsHub, DetectorBase, detect, detectorshub, Browser
 
 def init():
     #import sys
@@ -47,6 +47,31 @@ class Baidu(Vendor):
     prefs = dict(browser=['MSIE', 'Safari'])
     def getVersion(self, agent):
         return agent.split('%s ' % self.look_for)[-1].split(' ')[0].strip(STRIPED)
+
+class UCWEB(Browser):
+    look_for = 'UCWEB'
+    #prefs = dict(browser=['Opera'])
+    def getVersion(self, agent):
+        # NokiaE63/UCWEB7.2.2.51/28/800
+        # UCWEB8.2.0.116/50/999
+        # Nokia 5320/UCWEB7.5.0.66/28/800
+        a = agent.find(self.look_for)
+        b = agent.find('/', a)
+        return agent[a + len(self.look_for) : b]
+
+class Nokia(Vendor):
+    look_for = 'Nokia'
+    prefs = dict(browser=['Safari'])
+    def getVersion(self, agent):
+        # Nokia500/010.029
+        a = agent.find(self.look_for)
+        b = agent.find('/', a)
+        if b == -1:
+            b = agent.find('"', a)
+        if b != -1:
+            return agent[a + len(self.look_for) : b].strip('); ')
+        else:
+            return 'Unknown'
 
 init()
 
@@ -98,4 +123,7 @@ if __name__ == '__main__':
 
     import sys
     for line in sys.stdin:
-    	print line, detect(line)
+        #print line
+    	#print detect(line)['engine']
+        if 'engine' not in detect(line):
+            print line

@@ -4,9 +4,9 @@ import tree
 
 can_register = True
 
-_os = tree.Tree({'os': {}, 'default_action':'add'})
-_br = tree.Tree({'br': {}, 'default_action':'add'})
-_vd = tree.Tree({'vendor': {}, 'default_action':'add'})
+_os = {'os': {}}
+_br = {'br': {}}
+_vd = {'vendor': {}}
 
 def add(t):
     a = t.get('os')
@@ -15,17 +15,17 @@ def add(t):
             d = {a['name'] : {a['version']: 1}}
         else:
             d = {a['name'] : 1}
-        _os.merge({'os':d})
+        tree.add(_os, {'os':d})
 
     a = t.get('browser')
     if a: 
         d = {a['name'] : {a['version']:1}}
-        _br.merge({'br' : d})
+        tree.add(_br, {'br' : d})
 
     a = t.get('vendor')
     if a: 
         d = {a['name'] : {a['version']:1}}
-        _vd.merge({'vendor' : d})
+        tree.add(_vd, {'vendor' : d})
 
 _default_index = None
 
@@ -40,26 +40,23 @@ def process(arr):
     else:
         t = httpagentparser.detect(arr[_default_index])
 
-    # {'os': {'name': 'Linux'},
-    #   'browser': {'version': '5.0.307.11', 'name': 'Chrome'}}
     if t:
         add(t)
 
 def result():
     global _os, _br, _vd
     # TODO: ugly ._dict
-    x = ('os', _os._dict), ('br', _br._dict), ('vendor', _vd._dict)
+    x = ('os', _os), ('br', _br), ('vendor', _vd)
 
-    # TODO: ugly copy code
-    _os = tree.Tree({'os': {}, 'default_action':'add'})
-    _br = tree.Tree({'br': {}, 'default_action':'add'})
-    _vd = tree.Tree({'vendor': {}, 'default_action':'add'})
+    init()
     return x
 
 def init():
-    pass
-    # from xx import ctx
-    # ctx.init('', pipe, result)
+    global _os, _br, _vd
+    _os = {'os': {}}
+    _br = {'br': {}}
+    _vd = {'vendor': {}}
+
 
 
 """
