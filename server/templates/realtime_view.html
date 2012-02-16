@@ -85,11 +85,16 @@ body {
 					var c = v;
 				}
 
+				// TODO: use multi-circle pie
 				if (a.length >= title.split(',').length + 2)
 		  			var name = a.slice(0, a.length - 1).join(',');
 		  		else
 		  			var name = a.join(',');
 
+		  		if ($.isArray(c))
+		  			c = c[c.length - 1];
+
+		  		console.log('c', c);
 		  		if (isNaN(sa[name]))
 		  			sa[name] = c;
 		  		else
