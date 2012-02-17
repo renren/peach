@@ -17,8 +17,10 @@ Examples:
 >>> d = {'ip1': { 'cpu': 0.2, 'net':120 },
 ...     'ip2': { 'cpu': 0.3, 'net':10 },
 ...     'ip3': { 'cpu0': 0.3, 'cpu1':0.6 },
-...     'arr': [0.3,0.6]},
+...     'arr': [0.3,0.6],
 ...     }
+>>> type(d)
+<type 'dict'>
 
 >>> list(query(d, 'ip1,net'))
 [(['ip1', 'net'], 120)]
@@ -165,6 +167,9 @@ def _query(d, pats):
         
     last_i = len(pats) - 1
 
+    if not isinstance(d, dict):
+        return
+
     sub_dict = d
     for i, (pat, action) in enumerate(pats):
         if '*' in pat or '?' in pat:
@@ -173,7 +178,7 @@ def _query(d, pats):
                 ret.append((t1,t2))
             for k,v in sub_dict.iteritems():
                 if match(k, pat):
-                    if not isinstance(v, dict):
+                    if last_i == i and not isinstance(v, dict):
                         # yield [k], v
                         gather([k], v)
                     for t in _query(v, pats[i+1:]):
@@ -184,7 +189,11 @@ def _query(d, pats):
             if ret:
                 if action is not None and action != 'list':
                     get1 = operator.itemgetter(1)
-                    a = math.fsum(map(get1, ret))
+                    try:
+                        a = math.fsum(map(get1, ret))
+                    except:
+                        assert False, (action, ret)
+
                     if action == 'avg':
                         #print 'avg:', ret, a, '/', len(ret)
                         a = decimal.Decimal(str(a)) / len(ret)
@@ -213,6 +222,7 @@ def _query(d, pats):
         return
 
 def query(d, s):
+    assert isinstance(d, dict), (type(d),d)
     pat_action_list = []
     for i in s.split(','):
         if '|' in i:
@@ -230,13 +240,17 @@ if __name__ == '__main__':
          'ip2': { 'cpu': 0.3, 'net':10 }, \
          'ip3': { 'cpu0': 0.3, 'cpu1':0.6 }, \
          'foo': 3, \
+         'arr': [10,9,8], \
          'a' : {'b' : {'c' : {'d':42}}} \
         }
     pprint.pprint(d)
     print 'loop(d)'
     for i in loop(d): print i
 
-    cases = ['ip1,cpu',
+    cases = [
+             '*,net',
+             '*|sum,net',
+             'ip1,cpu',
              'ip2,cpu',
              'ip1,net',
              'ip1',
