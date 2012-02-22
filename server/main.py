@@ -71,7 +71,7 @@ def main():
         application.listen(8000)
     io = IOLoop.instance()
 
-    #io.add_timeout(
+    #io.add_timeout(core.tick)
     
     io.start()
 
