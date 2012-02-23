@@ -50,13 +50,25 @@ body {
 		    }
 		  });
 
+		  var default_interval = 8 * 1000; // in seconds
 		  function toSeries(da) {
 		  	// [['br,Chrome,10.0.648.45', 7.0],..
 		  	// [{name:'', data:[[now, y]}
 		  	var now = (new Date()).getTime();
+		  	// console.log('now', now);
 		  	var ret = [];
 		  	for(var i=0; i<da.length; ++i) {
-		  		ret.push({name:da[i][0], data:[[now,da[i][1]]]});
+		  		var v = da[i][1];
+		  		if($.isArray(v)) {
+		  			var pv = []; // paird: [time, v]
+		  			var start = v.length < count_limit ? 0 : v.length - count_limit;
+		  			for(var j=start;j<v.length; ++j)
+		  				pv.push([now-(v.length-j)*default_interval, v[j]]);
+		  			// console.log(da[i][0], pv);
+			  		ret.push({name:da[i][0], data:pv});
+		  		}
+		  		else
+		  			ret.push({name:da[i][0], data:[[now,da[i][1]]]});
 		  	}
 		  	return ret;
 		  }
@@ -73,11 +85,16 @@ body {
 					var c = v;
 				}
 
+				// TODO: use multi-circle pie
 				if (a.length >= title.split(',').length + 2)
 		  			var name = a.slice(0, a.length - 1).join(',');
 		  		else
 		  			var name = a.join(',');
 
+		  		if ($.isArray(c))
+		  			c = c[c.length - 1];
+
+		  		console.log('c', c);
 		  		if (isNaN(sa[name]))
 		  			sa[name] = c;
 		  		else
@@ -93,9 +110,10 @@ body {
 		  }
 
 		  var title = "{{key}}";
-		  var data = [{% for k, v in series %}['{{k|safe}}', {{v}}],
+		  var data = [{% for k, v in series %}['{{k|safe}}', {{v}}]{% if not loop.last %},{% endif %}
 		  	{% endfor %}];
 		  var chart_type = '{{type}}';
+		  var count_limit = 20;
 		  var chart;
 		  $(document).ready(function () {
 		    chart = new Highcharts.Chart({
@@ -212,7 +230,7 @@ body {
 		    }
 
 	        // shift = (s.data.length > (document.body.clientWidth * 0.9/20));
-	        var shift  = s.data.length > 20;
+	        var shift  = s.data.length > count_limit;
 		    var x = (new Date()).getTime(), // current time
             	y = val;
 		    s.addPoint([x, y], false, shift);
@@ -231,6 +249,8 @@ body {
 	          		});
 	          		chart.redraw();
 	          	}
+
+	          	$('#last').text((new Date()).toUTCString());
 		      
 		      	if (!pause)
 		        	setTimeout(pull, 1);
@@ -243,6 +263,6 @@ body {
 		
 		<!-- 3. Add the container -->
 		<div id="container" style="width: 90%; height: 800px; margin: 0 auto"></div>
-		<a id="pause" href="#">pause</a>
+		<a id="pause" href="#">pause</a> last update: <span id="last"></span>
 	</body>
 </html>
