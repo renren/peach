@@ -1,36 +1,51 @@
 from distutils.core import setup
 
-setup(name = 'slothagent',
+author = 'Lax & Ken'
+email = ''
+classifiers = [
+        'Development Status :: 4 - Beta',
+        'Environment :: Web Environment',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: BSD License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+        'Topic :: Software Development :: Libraries :: Python Modules'
+    ],
+
+setup(name = 'peachagent',
       version = '1.0',
-      description = 'sloth agent',
-      author = ['Lax', 'Ken'],
-      author_email = '',
-      url = 'https://github.com/xiaonei/sloth',
-      packages = ['sloth.agent', 'sloth.agent.modules'],
+      description = 'The realtime monitor, agent module',
+      author = author,
+      author_email = email,
+      url = 'https://github.com/xiaonei/peach',
+      packages = ['peach.agent', 'peach.agent.modules'],
       package_dir = {
-      	'sloth.agent': 'agent',
-      	'sloth.agent.modules': 'agent/modules',
+      	'peach.agent': 'agent',
+      	'peach.agent.modules': 'agent/modules',
       },
       package_data = {
-      	'sloth.agent': ['agent/*.py'],
-      	'sloth.agent.modules': ['agent/modules/*.py']
+      	'peach.agent': ['agent/*.py'],
+      	'peach.agent.modules': ['agent/modules/*.py']
       },
+      classifiers = classifiers
      )
 
 
-setup(name = 'slothserver',
+setup(name = 'peachserver',
       version = '1.0',
-      description = 'sloth server',
-      author = ['Lax', 'Ken'],
-      author_email = '',
-      url = 'https://github.com/xiaonei/sloth',
-      packages = ['sloth.server', 'sloth.server.pipes'],
+      description = 'The realtime monitor, server module',
+      author = author,
+      author_email = email,
+      url = 'https://github.com/xiaonei/peach',
+      packages = ['peach.server', 'peach.server.pipes'],
       package_dir = {
-      	'sloth.server': 'server',
-      	'sloth.server.pipes': 'server/pipes',
+      	'peach.server': 'server',
+      	'peach.server.pipes': 'server/pipes',
       },
       package_data = {
-      	'sloth.server': ['server/*.py', 'server/static/*', 'server/templates/*'],
-      	'sloth.server.pipes': ['server/pipes/*.py']
+      	'peach.server': ['server/*.py', 'server/static/*', 'server/templates/*'],
+      	'peach.server.pipes': ['server/pipes/*.py']
       },
+      classifiers = classifiers
      )
