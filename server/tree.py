@@ -85,9 +85,6 @@ def merge(d, *args, **kwargs):
     if len(kwargs) ==0 and len(args) and isinstance(args[0], dict):
         kwargs = args[0]
     for keyin, d1,d2,key,v2 in _loop_by(d, kwargs):
-        #print keyin, key,v2
-        #print '|'.join([repr(x) for x in [keyin, d1,d2,key,v2]])
-        
         if keyin:
             v1 = d1[key]
             if not isinstance(v1, list):

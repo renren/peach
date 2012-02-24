@@ -12,19 +12,25 @@ def add(t):
     a = t.get('os')
     if a:
         if 'version' in a:
-            d = {a['name'] : {a['version']: 1}}
+            # remove dot for mongo
+            ver = a['version'].replace('.', '_', 10)
+            d = {a['name'] : {ver: 1}}
         else:
             d = {a['name'] : 1}
         tree.add(_os, {'os':d})
 
     a = t.get('browser')
-    if a: 
-        d = {a['name'] : {a['version']:1}}
+    if a:
+        # remove dot for mongo
+        ver = a['version'].replace('.', '_', 10)
+        d = {a['name'] : {ver:1}}
         tree.add(_br, {'br' : d})
 
     a = t.get('vendor')
     if a: 
-        d = {a['name'] : {a['version']:1}}
+        # remove dot for mongo
+        ver = a['version'].replace('.', '_', 10)
+        d = {a['name'] : {ver:1}}
         tree.add(_vd, {'vendor' : d})
 
 _default_index = None

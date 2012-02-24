@@ -20,7 +20,7 @@ def push_once(url):
     global push_count
     push_count += 1
 
-    s = json.dumps({'127.0.0.1': tree})
+    s = json.dumps({'127_0_0_1': tree})
     s = urllib.urlencode({"json": s})
     f = urllib2.urlopen(url, s)
     f.read()
