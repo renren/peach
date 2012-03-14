@@ -97,14 +97,22 @@ stat_reduce = Code("function(doc, prev) {"
 )
 # group(key, condition, initial, reduce, finalize=None, command=True)
 now = datetime.datetime.utcnow()
-last = now - datetime.timedelta(minutes=5)
+last = now - datetime.timedelta(minutes=10)
 result = cl.group( {"key" : "_core"},
     {'time' : {"$gte": last, "$lt": now}}, 
     {"brstat" : {"core" : {}, "vender" : {}}, "osstat" : {}, "scrstat" : {}},
     stat_reduce
 )
-pprint.pprint(result)
 
+try:
+    r_brstat = result[0]['brstat']['vender']
+    for br in r_brstat:
+	for br_v in r_brstat[br]:
+	    print '%s,%s,%s' % (br, r_brstat[br][br_v], br_v)
+    exit
+except:
+    pprint.pprint(result)
+    pass
 
 try:
     url = "http://127.0.0.1/push"
