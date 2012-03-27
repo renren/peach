@@ -5,6 +5,9 @@ Examples:
 >>> merge({'ip1': {'cpu': 0.2}}, {'ip1': {'cpu': 0.4}})
 {'ip1': {'cpu': [0.2, 0.4]}}
 
+>>> merge({}, {1:2})
+{1: 2}
+
 >>> merge({'ip1': {'cpu': 0.2}}, a=3,b=3)
 {'a': 3, 'ip1': {'cpu': 0.2}, 'b': 3}
 
@@ -96,6 +99,27 @@ def merge(d, *args, **kwargs):
             d1[key] = copy.deepcopy(v2)
     return d
 
+def shrink(d):
+    """
+    >>> d = {'br': {'hello': [4, 4, 4, 4, 4, 4, 4, 8]}}
+    >>> shrink(d)
+    >>> d
+    {'br': {'hello': [8]}}
+
+    >>> d = {'br': {'hello': {'world': [1,2,3]}}}
+    >>> shrink(d)
+    >>> d
+    {'br': {'hello': {'world': [3]}}}
+
+    >>> d = {'br': [1,2,3]}
+    >>> shrink(d)
+    >>> d
+    {'br': [3]}
+    """
+    for ks, v in loop(d):
+        if isinstance(v, list):
+            del v[:len(v) - 1]
+
 def add(d, *args, **kwargs):
     """ TODO: code same as merge
     """
@@ -138,7 +162,9 @@ def expand(d, keys=None, sep=','):
             keys.pop()
         
 def loop(d):
-    """recursively iterate item of dict"""
+    """recursively iterate item of dict
+    ([keys], value)
+    """
     assert isinstance(d, dict)
     for k,v in d.iteritems():
         if not isinstance(v, dict):

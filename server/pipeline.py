@@ -44,8 +44,8 @@ def run(f):
 
     for p in pipes():
         for k, d in p.result():
-            core.update(d)
-            #logging.debug('pipe run %s: %r', k, d)
+            core.update(k, d)
+            
     logging.debug('pipe process %d line, %d failed', count_line, count_failed)
 
 @lazy.memoized

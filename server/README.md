@@ -4,3 +4,6 @@ REQUIREMENTS
 # tornado(or Nginx with comet)
 # flask
 
+
+pip install tornado flask asyncmongo
+

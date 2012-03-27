@@ -13,7 +13,6 @@ import pipeline
 app = Flask(__name__)
 
 app.debug = True
-app.tree = core._tree # TODO: remove
 app.waiters = core.waiters
 
 #app.add_url_rule('/favicon.ico', redirect_to=url_for('static', filename='favicon.ico'))
@@ -30,11 +29,15 @@ def push():
             j = request.form['json'].encode('utf-8')
             d = json.loads(j)
 
-        #for k, v in d.iteritems():
-        if d:
-            core.update(d)
-    else:
-        pass
+            # TODO: k
+            k = d.keys()[0]
+            core.update(k, d)
+
+        elif 'k' in request.form and 'v' in request.form:
+            key = request.form['k'].encode('utf-8')
+            value = request.form['v'].encode('utf-8')
+            # TODO:
+    
     return render_template('post.html')
 
 @app.route('/raw', methods=['POST', 'PUT'])
@@ -50,13 +53,13 @@ def as_dict(o):
 
 @app.route('/all')
 def all():
-    #return jsonify(app.tree._dict)
-    return Response(json.dumps(app.tree,indent=None if request.is_xhr else 2), mimetype='application/json')
+    #return jsonify(core.engine._dict)
+    return Response(json.dumps(core.engine,indent=None if request.is_xhr else 2), mimetype='application/json')
     
 
 def getmatch(key):
     d = []
-    for ks, item in tree.query(app.tree, key):
+    for ks, item in tree.query(core.engine, key):
         d.append((','.join(ks), item))
 
     d.sort(key=lambda x: x[0])
