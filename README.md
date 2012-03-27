@@ -73,6 +73,10 @@ url map
 =======
 request argument name style like: e or a,b or a,,c
 <pre>
+/api
+  /api/q/a,b.json current tree
+  
+
 /push
   form field support json/accesslog
   json -> merge into core tree
