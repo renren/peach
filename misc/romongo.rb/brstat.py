@@ -56,6 +56,7 @@ stat_reduce = Code("function(doc, prev) {"
 "		prev.brstat.vender[doc._shell] = {};"
 "		prev.brstat.vender[doc._shell][doc._shell_ver] = 1;"
 "	}"
+
 "	if ( doc.oscore in prev.osstat ) {"
 "		if ( doc.os_ver in prev.osstat[doc.oscore] ) {"
 "			if ( doc.os_dist in prev.osstat[doc.oscore][doc.os_ver] ) {"
@@ -80,18 +81,38 @@ stat_reduce = Code("function(doc, prev) {"
 "		prev.osstat[doc.oscore][doc.os_ver][doc.os_dist][doc.os_dist_ver] = 1;"
 "	}"
 
+"	scr_res  = doc.res_width+ '_' + doc.res_height;"
+"	if ( doc.orientation in prev.scrstat ) {"
+"		if (scr_res in prev.scrstat[doc.orientation]) {"
+"			prev.scrstat[doc.orientation][scr_res]++;"
+"		} else {"
+"			prev.scrstat[doc.orientation][scr_res] = 1;"
+"		}"
+"	} else {"
+"		prev.scrstat[doc.orientation] = {};"
+"		prev.scrstat[doc.orientation][scr_res] = 1;"
+"	}"
+
 "}"
 )
 # group(key, condition, initial, reduce, finalize=None, command=True)
 now = datetime.datetime.utcnow()
-last = now - datetime.timedelta(minutes=5)
+last = now - datetime.timedelta(minutes=10)
 result = cl.group( {"key" : "_core"},
     {'time' : {"$gte": last, "$lt": now}}, 
-    {"brstat" : {"core" : {}, "vender" : {}}, "osstat" : {}},
+    {"brstat" : {"core" : {}, "vender" : {}}, "osstat" : {}, "scrstat" : {}},
     stat_reduce
 )
-pprint.pprint(result)
 
+try:
+    r_brstat = result[0]['brstat']['vender']
+    for br in r_brstat:
+	for br_v in r_brstat[br]:
+	    print '%s,%s,%s' % (br, r_brstat[br][br_v], br_v)
+    exit
+except:
+    pprint.pprint(result)
+    pass
 
 try:
     url = "http://127.0.0.1/push"
@@ -100,7 +121,7 @@ try:
 
     # POST to sloth server
     import urllib, urllib2,json
-    data = { 'brstat': result[0]['brstat'], 'osstat': result[0]['osstat']}
+    data = { 'brstat': result[0]['brstat'], 'osstat': result[0]['osstat'], 'scrstat': result[0]['scrstat'] }
     params = urllib.urlencode({'json':json.dumps(data)})
     f = urllib2.urlopen(url, params)
     f.read()
