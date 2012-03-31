@@ -45,7 +45,7 @@ directory layout
 <pre>
 server/
   main.py
-  tree.py -> async store in trend db
+  tree.py
   treedb.py
   pushviahttp.py
   pushviasocket.py
@@ -73,14 +73,17 @@ url map
 =======
 request argument name style like: e or a,b or a,,c
 <pre>
+/api/get/a.b.c
+/api/push/a.b.c=value
+
 /push
   form field support json/accesslog
   json -> merge into core tree
   accesslog -> pipes -> tree -> merge into core tree
 
-/pull/?key-br
-/pull/?key-br,ie
-/pull/?key-br,ie,7
+/pull/?br
+/pull/?br,ie
+/pull/?br,ie,7
   comet, repsonse in json list
     [{br,ie,7 : 2328},
     {br,ie,sogou,3 : 323}]

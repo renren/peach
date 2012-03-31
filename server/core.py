@@ -1,15 +1,30 @@
 """
 >>> def p(v):
-...    print 'callback got:', v
->>> waiters.connect('foo,bar', p)
+...    print 'callback p got:', v
+>>> waiters.connect('a.b', p)
+>>> waiters.live_signals
+['a.b']
 
->>> update('foo', {'foo':{'bar':3}}) #doctest: +SKIP
-callback got: {'foo,bar': 3}
+>>> update('a', {'b':1})
+callback p got: {'a.b': 1}
 
->>> waiters.disconnect('foo,bar', p)
->>> update({'foo':{'bar':4}}) #doctest: +SKIP
->>> _tree #doctest: +SKIP
-{'foo': {'bar': [3, 4]}}
+>>> waiters.disconnect(p)
+>>> update('a', {'b':2})
+
+>>> engine
+{'a': {'b': [1, 2]}}
+
+>>> update('a', {'b': 3})
+>>> engine
+{'a': {'b': [1, 2, 3]}}
+>>> list(engine.query('a.b'))
+[(['a', 'b'], [1, 2, 3])]
+>>> list(engine.query('a'))
+[(['a', 'b'], [1, 2, 3])]
+
+>>> update('a', {'b': 4})
+>>> engine
+{'a': {'b': [1, 2, 3, 4]}}
 """
 
 import collections
@@ -31,24 +46,27 @@ class Dispatcher(object):
     ['foo']
     >>> d.send('foo', 'bar')
     bar
+    >>> d.disconnect(f)
+    >>> d.live_signals
+    []
     """
     def __init__(self):
-        self._signals = {}
+        self._signals = {} # signal => [callback, ..]
+        self._callbacks = {} # callback => signal
 
     def connect(self, signal, callback):
         cs = self._signals.setdefault(signal, [])
         cs.append(callback)
+        self._callbacks.setdefault(callback, signal)
+        # TODO:
         # cs.append(stack_context.wrap(callback))
 
-    def disconnect(self, signal, callback):
-        # TODO: ugly signal argument, work with callback only!
-        cs = self._signals.get(signal, None)
-        if cs:
-            # TODO: support stack_context
-            cs.remove(callback)
-
-    def get_receivers(self):
-        pass
+    def disconnect(self, callback):
+        signal = self._callbacks.pop(callback)
+        if signal:
+            cs = self._signals.get(signal)
+            if cs:
+                cs.remove(callback)
 
     @property
     def live_signals(self):
@@ -59,7 +77,7 @@ class Dispatcher(object):
             # pop them is expensive
             cs = self._signals.pop(signal)
         except:
-            logging.exception('send pop failed')
+            logging.warning('no listener signal %s fired' % signal)
             return
         
         for callback in cs:
@@ -114,16 +132,20 @@ class Engine(dict):
     """
     def __init__(self):
         self.state_map = {} # key => State()
-        self.to_dump_keys = set()
+        self.update_keys = set()
 
     def update(self, k, d):
         rd = self.setdefault(k, {})
         tree.merge(rd, d)
 
-        self.to_dump_keys.add(k)
+        self.update_keys.add(k)
 
+        # TODO: realy need this?
         s = self.state_map.setdefault(k, State())
         s.update()
+
+    def query(self, keys):
+        return tree.query(self, keys)
 
     def state(self, k):
         return self.state_map.get(k, None)
@@ -134,18 +156,23 @@ class Engine(dict):
             logging.error('dump failed: %r', error)
 
     def dump(self, col):
-        if True:
-            for k in self.to_dump_keys:
-                v = self.get(k)
-                if not v: continue
-                col.insert({
-                            'key': k, 'when':datetime.datetime.utcnow(),
-                            'data': v}, callback=self._insert_callback)
+        for k in self.update_keys:
+            v = self.get(k)
+            if not v: continue
+            try:
+                col.insert({'key': k, 'when':datetime.datetime.utcnow(),
+                            'data': v}, 
+                            callback=self._insert_callback)
+            except Exception,e:
+                logging.error('insert failed %r key:%s' % (e, k))
 
-        self.to_dump_keys.clear()
+        # TODO: only shrink update_keys
+        for k in self.update_keys:
+            v = self.get(k)
+            tree.shrink(v)
 
-        # TODO: shrink self
-        tree.shrink(self)
+        self.update_keys.clear()
+        
 
 # TODO: once
 engine = Engine()
@@ -161,27 +188,31 @@ tick_interval = 60 #
 _tick_install = False
 
 def update(k, d):
-    lived = [key for key in waiters.live_signals if tree.keyin(key, d)]
-    #print 'live', waiters.live_signals, lived, k,d.keys()
-    for key in lived:
+    # notify reatime listener(s)
+    kd = {k : d}
+    lives = [signal for signal in waiters.live_signals 
+             if tree.keyin(signal, kd)]
+    #print 'candidate keys:', lives
+    for key in lives:
         fd = {}
-        for ks, x in tree.query(d, key):
-            fd[','.join(ks)] = x
+        for ks, x in tree.query(kd, key):
+            fd['.'.join(ks)] = x
         #print 'fire', key, fd
         waiters.send(key, fd)
 
+    # merge
     engine.update(k, d)
 
     # need dump tree?
+    # TODO: move into Engine?
     global _last_update, _last_dump
     now = time.time()
     if _last_dump is None or now - _last_dump > tick_interval:
         tick_later()
     _last_update = time.time()
 
-
-def init():
-    logging.info('core.init')
+def init_db():
+    logging.info('core.init_db')
     global db
     db = asyncmongo.Client(pool_id="test",
                            host='10.22.206.206', # TODO: read from conf
@@ -206,7 +237,7 @@ def tick():
     global db, _last_dump, _tick_install
 
     if db is None:
-        init()
+        init_db()
     
     engine.dump(db.trend)
 

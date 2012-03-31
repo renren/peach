@@ -25,31 +25,31 @@ Examples:
 >>> type(d)
 <type 'dict'>
 
->>> list(query(d, 'ip1,net'))
+>>> list(query(d, 'ip1.net'))
 [(['ip1', 'net'], 120)]
 
->>> for i in query(d, 'ip*,cpu'): print i
+>>> for i in query(d, 'ip*.cpu'): print i
 (['ip2', 'cpu'], 0.3)
 (['ip1', 'cpu'], 0.2)
 
->>> for i in query(d, 'ip*,cpu*'): print i
+>>> for i in query(d, 'ip*.cpu*'): print i
 (['ip2', 'cpu'], 0.3)
 (['ip3', 'cpu0'], 0.3)
 (['ip3', 'cpu1'], 0.6)
 (['ip1', 'cpu'], 0.2)
 
->>> for i in query(d, 'ip*|list,cpu*|avg'): print i
+>>> for i in query(d, 'ip*|list.cpu*|avg'): print i
 (['ip2', 'cpu*'], 0.3)
 (['ip3', 'cpu*'], 0.45)
 (['ip1', 'cpu*'], 0.2)
 
->>> for i in query(d, '*|sum,net'): print i
+>>> for i in query(d, '*|sum.net'): print i
 (['*'], 130.0)
 
->>> for i in query(d, '*|avg,net'): print i
+>>> for i in query(d, '*|avg.net'): print i
 (['*'], 65.0)
 
->>> for i in query(d, 'ip*|avg,cpu*|avg'): print i
+>>> for i in query(d, 'ip*|avg.cpu*|avg'): print i
 (['ip*'], 0.31666666666666665)
 """
 
@@ -58,9 +58,19 @@ import operator
 import fnmatch
 import math, decimal
 
-def keyin(key, d):
-    arr = key.split(',')
-    for a in arr:
+_SEP = '.'
+
+def keyin(keys, d):
+    """
+    >>> d = {'a': {'b': 1}}
+    >>> keyin('a.b', d)
+    True
+    >>> keyin('a', d)
+    True
+    >>> keyin('b', d)
+    False
+    """
+    for a in keys.split(_SEP):
         if a in d:
             d = d[a]
         else:
@@ -139,15 +149,15 @@ def add(d, *args, **kwargs):
 def match(s, pat):
     return fnmatch.fnmatchcase(s, pat)
 
-def expand(d, keys=None, sep=','):
+def expand(d, keys=None, sep=_SEP):
     """iterator all dict item, recursively
 
     >>> list(expand({'a':2}))
     [('a', 2)]
     >>> list(expand({'1':2},['a']))
-    [('a,1', 2)]
+    [('a.1', 2)]
     >>> list(expand({'1':2, '2':{'3':5}},['a']))
-    [('a,1', 2), ('a,2,3', 5)]
+    [('a.1', 2), ('a.2.3', 5)]
     """
     if keys is None:
         keys = []
@@ -247,7 +257,7 @@ def _query(d, pats):
 def query(d, s):
     assert isinstance(d, dict), (type(d),d)
     pat_action_list = []
-    for i in s.split(','):
+    for i in s.split(_SEP):
         if '|' in i:
             pat, action = i.split('|')
         else:
@@ -271,19 +281,19 @@ if __name__ == '__main__':
     for i in loop(d): print i
 
     cases = [
-             '*,net',
+             '*.net',
              '*|sum,net',
-             'ip1,cpu',
-             'ip2,cpu',
-             'ip1,net',
+             'ip1.cpu',
+             'ip2.cpu',
+             'ip1.net',
              'ip1',
              'a',
-             'ip*,cpu',
-             '*1,net*',
-             '?p?,net*',
-             'ip*,net*',
-             'ip*,cpu*',
-             'ip*|list,cpu*|avg',
+             'ip*.cpu',
+             '*1.net*',
+             '?p?.net*',
+             'ip*.net*',
+             'ip*.cpu*',
+             'ip*|list.cpu*|avg',
         ]
 
     for c in cases:

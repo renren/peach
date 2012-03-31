@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <style>
+    
+  </style>
+  <title>Peach</title>
+  <script type="text/javascript" src="{{static_url('jquery-1.6.2.js')}}"></script>
+  <script type="text/javascript" src="{{static_url('highcharts.src.js')}}"></script>
+  <script type="text/javascript">
+    function treeClick() {
+      
+    }
+    function addTrendView(key, period) {}
+    function init() {
+      $.getJSON('/tree/', function (data) {
+        // 
+        $.each(data, function (k, v) {
+          var a = document.createElement('a');
+          $(a).click = treeClick;
+          $('#tree ul').append('<li><a href="#" onclick="treeClick">' + v + '</a></li>');
+        });
+
+        // 
+        if (data.length) {
+          var key = data[0]; // TODO: encoding
+          $('iframe#rt').attr('src', '/realtime/' + key);
+          addTrendView(key, '5min');
+          addTrendView(key, '1hr');
+          addTrendView(key, '1mon');
+          addTrendView(key, '1y');
+        }
+      });
+    }
+    $(document).ready(init);
+    </script>
+</head>
+<body>
+  <div id="tree">
+  <ul></ul>
+  </div>
+  <div id="favlist">
+  </div>
+  <div id="rt">
+  <iframe id="rt" src=""></iframe>
+  </div>
+  <div id="tv">
+  </div>
+</body>
+</html>

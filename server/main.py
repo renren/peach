@@ -5,6 +5,7 @@ from tornado.wsgi import WSGIContainer
 from tornado.ioloop import IOLoop
 from tornado.web import FallbackHandler, RequestHandler, Application
 import tornado.web
+import tornado.escape
 
 # https://gist.github.com/1510715
 # https://gist.github.com/753992
@@ -14,7 +15,7 @@ import pipeline
 
 class MainHandler(ChunkedHandler):
     def get(self):
-        self.write("This message comes from Tornado ^_^")
+        self.render('index.html')
 
     def put(self):
         if not self._handle_chunked():
@@ -47,10 +48,11 @@ class PullHandler(RequestHandler):
         app.waiters.disconnect(self._name, self._on_fire)
 
     def _on_fire(self, value):
-        self.write(value)
+        self.write(tornado.escape.json_encode(value))
         self.finish()
 
 def main():
+    
     settings = dict(
             debug=True,
             cookie_secret="43oETzKXQBGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
@@ -60,9 +62,15 @@ def main():
             autoescape="xhtml_escape",
         )
 
+    import api
+
     application = Application([
+        (r"/", MainHandler),
         (r"/tornado", MainHandler),
         (r"/pull/([^/]+)", PullHandler),
+        (api.GetHandler.FILTER, api.GetHandler),
+        (api.PushHandler.FILTER, api.PushHandler),
+        (api.TreeHandler.FILTER, api.TreeHandler),
         (r".*", FallbackHandler, dict(fallback=WSGIContainer(app))),
         ], **settings)
     try:
