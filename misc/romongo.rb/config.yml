@@ -4,7 +4,7 @@ romongo: # log server
     port: 8081
 
 mongo: # backend mongodb
-  host: 10.3.18.197
+  host: d1.mongo.d.xiaonei.com
   port: 27017
   db: beacon_sys
   collection: user_browser_logs

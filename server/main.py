@@ -62,7 +62,7 @@ class RealtimeViewHandler(RequestHandler):
         self.render('realtime.html', key='a.b')
 
 def main():
-    import api
+    import api, trend
 
     settings = dict(
             debug=True,
@@ -77,6 +77,7 @@ def main():
         (r"/", MainHandler),
         (r"/tornado", MainHandler),
         (r"/pull/([^/]+)", PullHandler),
+        (r"/trend/([^/]+)", trend.GetHandler),
         (api.GetHandler.FILTER, api.GetHandler),
         (api.PushHandler.FILTER, api.PushHandler),
         (api.TreeHandler.FILTER, api.TreeHandler),
@@ -86,9 +87,9 @@ def main():
 
     application = Application(urls, **settings)
     try:
-        application.listen(80)
+        application.listen(80, '0.0.0.0')
     except:
-        application.listen(8000)
+        application.listen(8000, '0.0.0.0')
     io = IOLoop.instance()
     io.start()
 

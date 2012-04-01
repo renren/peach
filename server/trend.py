@@ -1,20 +1,32 @@
-import os, logging, re
+import os, logging, re, datetime
 
 from tornado.web import FallbackHandler, RequestHandler, Application
 import tornado.web
+import json
+import asyncmongo
 
-import core
+from trend_storage import ts
 
 class GetHandler(RequestHandler):
     FILTER = r'/trend/(.*)'
-    @tornado.web.asynchronous
     def get(self, name):
         # query name order by when
+        key = name.encode('utf8')
+
+        p_end = datetime.datetime.utcnow()
+        p_start = p_end - datetime.timedelta(minutes=10)
+        period={'start': p_start, 'end': p_end}
+
+        values = [v for v in ts.get(key, period)]
+        if len(values) > 0:
+            self.write(json.dumps(values[0]))
+        else:
+            logging.info("[[_%s_]]" % values)
+            self.write("{}")
+
+    def _callback(self, name):
         pass
 
-    def _callback(self):
-        # 
-        pass
 """"
 
 /tree   |  /realtime/a.b
