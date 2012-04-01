@@ -1,0 +1,210 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <style>
+    body {
+      background-color: #282828;
+    }
+  </style>
+  <title>{{key}}</title>
+  <script type="text/javascript" src="{{static_url('jquery-1.6.2.js')}}"></script>
+  <script type="text/javascript" src="{{static_url('highcharts.src.js')}}"></script>
+  <script type="text/javascript">
+		  var ac_index = 0;
+		  function nextColor() {
+        	return rainbow(50, ac_index++);
+		  }
+
+      function rainbow(numOfSteps, step) {
+          // This function generates vibrant, "evenly spaced" colours (i.e. no clustering). This is ideal for creating easily distiguishable vibrant markers in Google Maps and other apps.
+          // Adam Cole, 2011-Sept-14
+          // HSV to RBG adapted from: http://mjijackson.com/2008/02/rgb-to-hsl-and-rgb-to-hsv-color-model-conversion-algorithms-in-javascript
+          var r, g, b;
+          var h = step / numOfSteps;
+          var i = ~~(h * 6);
+          var f = h * 6 - i;
+          var q = 1 - f;
+          switch(i % 6){
+              case 0: r = 1, g = f, b = 0; break;
+              case 1: r = q, g = 1, b = 0; break;
+              case 2: r = 0, g = 1, b = f; break;
+              case 3: r = 0, g = q, b = 1; break;
+              case 4: r = f, g = 0, b = 1; break;
+              case 5: r = 1, g = 0, b = q; break;
+          }
+          var c = "#" + ("00" + (~ ~(r * 255)).toString(16)).slice(-2) + ("00" + (~ ~(g * 255)).toString(16)).slice(-2) + ("00" + (~ ~(b * 255)).toString(16)).slice(-2);
+          return (c);
+      }
+
+      /*
+      var rtc = new RealTimeChart('container', 'a', 'series');
+      rtc.pause();
+      */
+
+      function findOrAddSeries(chart, name) {
+        for (x in chart.series) {
+          var val = chart.series[x];
+          if (val.name == name)
+            return val;
+        }
+
+        var fake_data = [];
+
+        chart.addSeries({
+          name: name,
+          data: fake_data,
+          color: nextColor()
+        });
+
+        for (x in chart.series) {
+          var val = chart.series[x];
+          if (val.name == name)
+            return val;
+        }
+      }
+
+
+      var RealTimeChart = function (id, key, chart_type) {
+        this.id = id;
+        console.log('id:', id, typeof (this.id));
+        this.key = key;
+        this.chart_type = chart_type;
+
+        this.chart = null;
+        this.stopped = false;
+
+        this.pause = function () { };
+
+        this.pull = function (rtc) {
+          $.getJSON('/pull/' + encodeURIComponent(rtc.key), function (data) {
+            console.log('in pull', data);
+            rtc.process(data);
+            rtc.chart.redraw();
+
+            if (!rtc.stopped)
+              setTimeout(rtc.pull, 1, rtc);
+          });
+        };
+
+        this.process = function (data) {
+          // console.log('process:', data);
+
+          // [([a,b], [1,2,3...])]
+          // or 
+          // [([a,b], 4)]
+          for (var i = 0; i < data.length; ++i) {
+            var name = data[i][0]; // TODO:
+            var s = findOrAddSeries(this.chart, name);
+
+            var now = new Date().getTime();
+            var ps = data[i][1];
+
+            // console.log('series:', name, 'data:', ps, 'before add:', s.data.length);
+            var shift = s.data.length > 20;
+
+            if (!$.isArray(ps)) {
+              s.addPoint([now, ps], false, shift);
+              continue;
+            } else {
+              now -= ps.length * 1000;
+
+              for (var j = 0; j < ps.length; ++j) {
+                // [x,y], redraw=false, shift=?
+                 // TODO: config as max_count_of_point
+                now += 1000;
+                s.addPoint([now, ps[j]], false, shift);
+              }
+            }
+          }
+        };
+
+        this.init = function (jsondata) {
+          console.log('in init', self, jsondata);
+          this.chart = new Highcharts.Chart({
+            chart: {
+              renderTo: this.id,
+              defaultSeriesType: 'spline',
+              marginRight: 10,
+              events: {
+                load: function () {
+
+                  // set up the updating of the chart each second
+                  var series = this.series[0];
+                  setInterval(function () {
+                    var x = (new Date()).getTime(), // current time
+										y = Math.random();
+                    series.addPoint([x, y], true, true);
+                  }, 1000);
+                }
+              }
+            },
+            title: {
+              text: 'Live data'
+            },
+            xAxis: {
+              type: 'datetime',
+              tickPixelInterval: 50
+            },
+            yAxis: {
+              title: {
+                text: 'Value'
+              },
+              plotLines: [{
+                value: 0,
+                width: 1,
+                color: '#808080'
+              }]
+            },
+            tooltip: {
+              formatter: function () {
+                return '<b>' + this.series.name + '</b><br/>' +
+								Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
+								Highcharts.numberFormat(this.y, 2);
+              }
+            },
+            legend: {
+              enabled: false
+            },
+            exporting: {
+              enabled: false
+            },
+            series: [{
+              name: 'Random data',
+              data: (function () {
+                // generate an array of random data
+                var data = [],
+								time = (new Date()).getTime(),
+								i;
+
+                for (i = -19; i <= 0; i++) {
+                  data.push({
+                    x: time + i * 1000,
+                    y: Math.random()
+                  });
+                }
+                return data;
+              })()
+            }]
+          });
+
+          this.process(jsondata);
+
+          this.pull(this);
+        };
+        var rtc = this;
+        $.getJSON('/api/get/' + encodeURIComponent(this.key), function (data) {
+          console.log('in getJSON', rtc, data);
+          rtc.init(data);
+        });
+        console.log('in RTC', this);
+      };
+
+      var rtc = new RealTimeChart('container', 'a', 'series');
+      rtc.pause();
+		</script>
+</head>
+<body>
+  <div id="container" style="width: 100%; height: 100%; margin: 0 auto"></div>
+</body>
+</html>

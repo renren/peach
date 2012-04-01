@@ -31,7 +31,7 @@ class GetHandler(RequestHandler):
             raise HTTPError(400)
         a = [i for i in x]
         print 'query:', a
-        self.write('%r' % a)
+        self.write(tornado.escape.json_encode(a))
 
     def on_connection_close(self):
         pass
@@ -66,6 +66,8 @@ class PushHandler(RequestHandler):
         # self._push(name, self.body)
 
     def _push(self, key, value):
+        assert isinstance(key, str)
+        assert isinstance(value, str)
         value = tonumber(value)
 
         a = key.split('.')
@@ -75,5 +77,5 @@ class PushHandler(RequestHandler):
         for x in a[1:len(a)-1]:
             sd = sd.setdefault(x, {})
         sd.setdefault(a[len(a) - 1], value)
-        # print 'push:', a[0], d
+        print 'push:', a[0], d
         core.update(a[0], d)

@@ -12,6 +12,7 @@ import tornado.escape
 from chunked_handler import ChunkedHandler
 from pages import app
 import pipeline
+import tree
 
 class MainHandler(ChunkedHandler):
     def get(self):
@@ -41,18 +42,28 @@ class MainHandler(ChunkedHandler):
 class PullHandler(RequestHandler):
     @tornado.web.asynchronous
     def get(self, name):
+        name = name.encode('utf8')
         self._name = name
         app.waiters.connect(name, self._on_fire)
 
     def on_connection_close(self):
-        app.waiters.disconnect(self._name, self._on_fire)
+        app.waiters.disconnect(self._on_fire)
 
     def _on_fire(self, value):
+        x = [i for i in tree.expand(value)]
+        #print 'fire', value, x
         self.write(tornado.escape.json_encode(value))
         self.finish()
 
+class RealtimeViewHandler(RequestHandler):
+    FILTER = r'/realtime/([^/]+)'
+    def get(self, name):
+        name = name.encode('utf8')
+        self.render('realtime.html', key='a.b')
+
 def main():
-    
+    import api
+
     settings = dict(
             debug=True,
             cookie_secret="43oETzKXQBGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
@@ -62,29 +73,25 @@ def main():
             autoescape="xhtml_escape",
         )
 
-    import api
-
-    application = Application([
+    urls = [
         (r"/", MainHandler),
         (r"/tornado", MainHandler),
         (r"/pull/([^/]+)", PullHandler),
         (api.GetHandler.FILTER, api.GetHandler),
         (api.PushHandler.FILTER, api.PushHandler),
         (api.TreeHandler.FILTER, api.TreeHandler),
+        (RealtimeViewHandler.FILTER, RealtimeViewHandler),
         (r".*", FallbackHandler, dict(fallback=WSGIContainer(app))),
-        ], **settings)
+        ]
+
+    application = Application(urls, **settings)
     try:
         application.listen(80)
     except:
         application.listen(8000)
     io = IOLoop.instance()
-
-    #io.add_timeout(core.tick)
-    
     io.start()
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     main()
-
-

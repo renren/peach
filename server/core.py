@@ -189,16 +189,16 @@ _tick_install = False
 
 def update(k, d):
     # notify reatime listener(s)
+    assert isinstance(k, str)
     kd = {k : d}
     lives = [signal for signal in waiters.live_signals 
              if tree.keyin(signal, kd)]
     #print 'candidate keys:', lives
     for key in lives:
-        fd = {}
-        for ks, x in tree.query(kd, key):
-            fd['.'.join(ks)] = x
-        #print 'fire', key, fd
-        waiters.send(key, fd)
+        print 'query', key, 'in', kd
+        assert isinstance(key, str)
+        ret = [x for x in tree.query(kd, key)]
+        waiters.send(key, ret)
 
     # merge
     engine.update(k, d)

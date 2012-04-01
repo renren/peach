@@ -14,7 +14,8 @@
     }
     function addTrendView(key, period) {}
     function init() {
-      $.getJSON('/tree/', function (data) {
+      var key = location.hash.substr(1);
+      $.getJSON('/tree/' + key, function (data) {
         // 
         $.each(data, function (k, v) {
           var a = document.createElement('a');
@@ -23,9 +24,10 @@
         });
 
         // 
-        if (data.length) {
+        if (data && data.length) {
           var key = data[0]; // TODO: encoding
-          $('iframe#rt').attr('src', '/realtime/' + key);
+          console.log('iframe', 'src', '/realtime/' + key);
+          $('iframe#rv').attr('src', '/realtime/a')
           addTrendView(key, '5min');
           addTrendView(key, '1hr');
           addTrendView(key, '1mon');
@@ -42,8 +44,8 @@
   </div>
   <div id="favlist">
   </div>
-  <div id="rt">
-  <iframe id="rt" src=""></iframe>
+  <div id="right">
+  <iframe id="rv" width="600" height="400"></iframe>
   </div>
   <div id="tv">
   </div>

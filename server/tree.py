@@ -25,32 +25,35 @@ Examples:
 >>> type(d)
 <type 'dict'>
 
+>>> [x for x in query({'a': {'b': 5}}, 'a')]
+[('a.b', 5)]
+
 >>> list(query(d, 'ip1.net'))
-[(['ip1', 'net'], 120)]
+[('ip1.net', 120)]
 
 >>> for i in query(d, 'ip*.cpu'): print i
-(['ip2', 'cpu'], 0.3)
-(['ip1', 'cpu'], 0.2)
+('ip2.cpu', 0.3)
+('ip1.cpu', 0.2)
 
 >>> for i in query(d, 'ip*.cpu*'): print i
-(['ip2', 'cpu'], 0.3)
-(['ip3', 'cpu0'], 0.3)
-(['ip3', 'cpu1'], 0.6)
-(['ip1', 'cpu'], 0.2)
+('ip2.cpu', 0.3)
+('ip3.cpu0', 0.3)
+('ip3.cpu1', 0.6)
+('ip1.cpu', 0.2)
 
 >>> for i in query(d, 'ip*|list.cpu*|avg'): print i
-(['ip2', 'cpu*'], 0.3)
-(['ip3', 'cpu*'], 0.45)
-(['ip1', 'cpu*'], 0.2)
+('ip2.cpu*', 0.3)
+('ip3.cpu*', 0.45)
+('ip1.cpu*', 0.2)
 
 >>> for i in query(d, '*|sum.net'): print i
-(['*'], 130.0)
+('*', 130.0)
 
 >>> for i in query(d, '*|avg.net'): print i
-(['*'], 65.0)
+('*', 65.0)
 
 >>> for i in query(d, 'ip*|avg.cpu*|avg'): print i
-(['ip*'], 0.31666666666666665)
+('ip*', 0.31666666666666665)
 """
 
 import copy
@@ -213,11 +216,9 @@ def _query(d, pats):
                 if match(k, pat):
                     if last_i == i and not isinstance(v, dict):
                         # yield [k], v
-                        gather([k], v)
+                        gather([k,], v)
                     for t in _query(v, pats[i+1:]):
-                        ks = [k]
-                        ks.extend(t[0])
-                        # yield ks, t[1]
+                        ks = [k,t[0]]
                         gather(ks, t[1])
             if ret:
                 if action is not None and action != 'list':
@@ -231,27 +232,40 @@ def _query(d, pats):
                         #print 'avg:', ret, a, '/', len(ret)
                         a = decimal.Decimal(str(a)) / len(ret)
                         a = float(a)
-                    yield [pat], a
+                    assert isinstance(pat, str)
+                    # print 'yield2', pat
+                    yield pat, a
                 else:
-                    for t in ret:
-                        yield t
+                    for k, v in ret:
+                        assert isinstance(k, list)
+                        # print 'yield2', _SEP.join(k)
+                        yield _SEP.join(k), v
         else:
             sub_dict = sub_dict.get(pat)
             if sub_dict is None: return
 
             if not isinstance(sub_dict, dict):
-                yield [pat], sub_dict
+                assert isinstance(pat, str)
+                # print 'yield3', pat
+                yield pat, sub_dict
                 return
             else:
                 if last_i == i:
                     y = loop(sub_dict)
+                    # reduce [(['b'], 5)] => [('b', 5)]
+                    y = [(_SEP.join(x[0]), x[1]) for x in y]
+                    
                 else:
                     y = _query(sub_dict, pats[i+1:])
+                    # assert [], [x for x in y]
 
                 for t in y:
-                    ks = [pat]
-                    ks.extend(t[0])
-                    yield ks, t[1]
+                    assert isinstance(pat, str), type(pat)
+                    assert isinstance(t[0], str), t
+                    ks = [pat, t[0]]
+                    assert isinstance(ks, list)
+                    # print 'yield4', _SEP.join(ks)
+                    yield _SEP.join(ks), t[1]
         return
 
 def query(d, s):
