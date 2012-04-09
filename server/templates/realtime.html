@@ -13,7 +13,9 @@
   <script type="text/javascript">
 		  var ac_index = 0;
 		  function nextColor() {
-        	return rainbow(50, ac_index++);
+        	var x = rainbow(10, ac_index++);
+          console.log('nextColor', x);
+          return x;
 		  }
 
       function rainbow(numOfSteps, step) {
@@ -111,7 +113,7 @@
 
               for (var j = 0; j < ps.length; ++j) {
                 // [x,y], redraw=false, shift=?
-                 // TODO: config as max_count_of_point
+                // TODO: config as max_count_of_point
                 now += 1000;
                 s.addPoint([now, ps[j]], false, shift);
               }
@@ -128,6 +130,7 @@
               marginRight: 10,
               events: {
                 load: function () {
+                  return;
 
                   // set up the updating of the chart each second
                   var series = this.series[0];
@@ -169,23 +172,7 @@
             exporting: {
               enabled: false
             },
-            series: [{
-              name: 'Random data',
-              data: (function () {
-                // generate an array of random data
-                var data = [],
-								time = (new Date()).getTime(),
-								i;
-
-                for (i = -19; i <= 0; i++) {
-                  data.push({
-                    x: time + i * 1000,
-                    y: Math.random()
-                  });
-                }
-                return data;
-              })()
-            }]
+            series: [],
           });
 
           this.process(jsondata);
@@ -200,7 +187,7 @@
         console.log('in RTC', this);
       };
 
-      var rtc = new RealTimeChart('container', 'a', 'series');
+      var rtc = new RealTimeChart('container', '{{key}}', 'series');
       rtc.pause();
 		</script>
 </head>
