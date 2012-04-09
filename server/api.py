@@ -49,14 +49,17 @@ class PushHandler(RequestHandler):
     FILTER = r'/api/push/(.*)$'
     def get(self, name):
         """ 
-        GET /api/push/a.b.c=1
+        GET /api/push/a.b.c=1,a.d=2
         update(a, {b: {c: 1}})
         """
         name = name.encode('utf8')
-        arr = name.split('=')
-        if len(arr) != 2:
-            raise HTTPError(400)
-        self._push(arr[0], arr[1])
+        arr = name.split(',')
+        for a in arr:
+            pair = a.split('=')
+            if len(pair) != 2:
+                continue
+
+            self._push(pair[0], pair[1])
         self.write('')
 
     def post(self, name):
