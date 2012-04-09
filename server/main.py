@@ -59,7 +59,7 @@ class RealtimeViewHandler(RequestHandler):
     FILTER = r'/realtime/([^/]+)'
     def get(self, name):
         name = name.encode('utf8')
-        self.render('realtime.html', key='a.b')
+        self.render('realtime.html', key=name)
 
 def main():
     import api, trend

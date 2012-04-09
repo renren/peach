@@ -171,7 +171,11 @@ class Engine(dict):
             v = self.get(k)
             tree.shrink(v)
 
+        # TODO: remove tool old keys
+        tree = {}
+
         self.update_keys.clear()
+        
         
 
 # TODO: once

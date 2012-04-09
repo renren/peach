@@ -60,13 +60,14 @@ def all():
 def getmatch(key):
     d = []
     for ks, item in tree.query(core.engine, key):
-        d.append((','.join(ks), item))
+        d.append((ks, item))
 
     d.sort(key=lambda x: x[0])
     return d
 
 @app.route('/get/<key>', methods=['GET'])
 def get(key):
+    key = key.encode('utf8')
     d = getmatch(key)
     #return jsonify(d)
     return Response(json.dumps(d, indent=None if request.is_xhr else 2), mimetype='application/json')
