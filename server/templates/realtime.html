@@ -72,16 +72,18 @@
         console.log('id:', id, typeof (this.id));
         this.key = key;
         this.chart_type = chart_type;
-
         this.chart = null;
         this.stopped = false;
+        this.item_count = 10;
 
         this.pause = function () { };
 
         this.pull = function (rtc) {
           $.getJSON('/pull/' + encodeURIComponent(rtc.key), function (data) {
-            console.log('in pull', data);
             rtc.process(data);
+
+            rtc.shrink();
+
             rtc.chart.redraw();
 
             if (!rtc.stopped)
@@ -99,27 +101,61 @@
             var name = data[i][0]; // TODO:
             var s = findOrAddSeries(this.chart, name);
 
-            var now = new Date().getTime();
             var ps = data[i][1];
 
             // console.log('series:', name, 'data:', ps, 'before add:', s.data.length);
-            var shift = s.data.length > 20;
+            var shift = s.data.length > this.item_count;
 
             if (!$.isArray(ps)) {
-              s.addPoint([now, ps], false, shift);
+              s.addPoint([new Date().getTime(), ps], false, shift);
               continue;
             } else {
-              now -= ps.length * 1000;
+              var now = (new Date()).getTime();
+              
+              var c = ps.length;
+              while (c--) {
+                now -= 1000; // fake 1 second interval
+                s.addPoint([now, ps[c]], false, shift);
 
-              for (var j = 0; j < ps.length; ++j) {
-                // [x,y], redraw=false, shift=?
-                // TODO: config as max_count_of_point
-                now += 1000;
-                s.addPoint([now, ps[j]], false, shift);
+                if (ps.length - c > this.item_count)
+                  break;
               }
             }
           }
+          
         };
+
+        this.shrink = function () {
+          // find out never update serie, then remove it
+          // 1 find the earliest one
+          var c = this.chart.series.length;
+          if (c <= 1) return;
+          
+          var most_early_serie = null;
+
+          var min_x = (new Date()).getTime();
+          while (c--) {
+            var s = this.chart.series[c];
+            if (s.data.length && s.data[0].x < min_x) {
+              min_x = s.data[0].x;
+              most_early_serie = s;
+            }
+          }
+          
+          // 2 check, if it is early than any other serie
+          var f = true;
+          var max_x = most_early_serie.data[most_early_serie.data.length - 1].x;
+          c = this.chart.series.length;
+          while (c--) {
+            var s = this.chart.series[c];
+            if (s != most_early_serie && s.data.length && s.data[0].x - max_x < 10000) { // 10 seconds
+              f = false;
+              break;
+            }
+          }
+
+          if (f) most_early_serie.remove();
+        }
 
         this.init = function (jsondata) {
           console.log('in init', self, jsondata);
@@ -170,7 +206,7 @@
               enabled: false
             },
             exporting: {
-              enabled: false
+              enabled: true
             },
             series: [],
           });
