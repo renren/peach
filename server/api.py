@@ -28,7 +28,7 @@ class GetHandler(RequestHandler):
         #name = name.replace('.', ',')
         x = core.engine.query(name)
         if not x:
-            raise HTTPError(400)
+            raise tornado.web.HTTPError(400)
         a = [i for i in x]
         print 'query:', a
         self.write(tornado.escape.json_encode(a))
