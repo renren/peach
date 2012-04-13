@@ -197,7 +197,8 @@ def update(k, d):
     kd = {k : d}
     lives = [signal for signal in waiters.live_signals 
              if tree.keyin(signal, kd)]
-    #print 'candidate keys:', lives
+    # print 'candidate keys:', lives, 'lives:', waiters.live_signals
+
     for key in lives:
         print 'query', key, 'in', kd
         assert isinstance(key, str)

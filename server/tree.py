@@ -63,21 +63,64 @@ import math, decimal
 
 _SEP = '.'
 
-def keyin(keys, d):
+def match(s, pat):
+    """
+    >>> match('a', 'a*')
+    True
+    >>> match('ab', 'a*')
+    True
+    >>> match('abc', 'a*')
+    True
+    >>> match('ab', 'b*')
+    False
+    """
+    return fnmatch.fnmatchcase(s, pat)
+
+def keyin(pats, d):
     """
     >>> d = {'a': {'b': 1}}
     >>> keyin('a.b', d)
     True
+    >>> keyin('a.b.c', d)
+    False
     >>> keyin('a', d)
     True
     >>> keyin('b', d)
     False
+
+    >>> keyin('a.*', d)
+    True
+    >>> keyin('*.b', d)
+    True
+    >>> keyin('*.c', d)
+    False
+    >>> d = {'a': {'b': {'c':'0'}}}
+    >>> keyin('*.c', d)
+    False
+    >>> keyin('a.*.c', d)
+    True
     """
-    for a in keys.split(_SEP):
-        if a in d:
-            d = d[a]
+    
+    pat_list = pats.split(_SEP)
+    _d = d
+    for i, pat in enumerate(pat_list):
+        if '*' in pat:
+            nd = {}
+            for k,v in _d.iteritems():
+                if match(k, pat):
+                    if isinstance(v, dict):
+                        nd.update(v)
+                    elif i == len(pat_list) - 1: # last one
+                        return True
+            if not nd: return False
+            _d = nd
         else:
-            return False
+            try:
+                if not pat in _d:
+                    return False
+                _d = _d[pat]
+            except:
+                return False
     return True
 
 def _loop_by(d1, d2):
@@ -148,9 +191,6 @@ def add(d, *args, **kwargs):
         else:
             d1[key] = copy.deepcopy(v2)
     return d
-
-def match(s, pat):
-    return fnmatch.fnmatchcase(s, pat)
 
 def expand(d, keys=None, sep=_SEP):
     """iterator all dict item, recursively
