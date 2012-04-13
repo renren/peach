@@ -94,9 +94,9 @@
         this.process = function (data) {
           // console.log('process:', data);
 
-          // [([a,b], [1,2,3...])]
+          // [["a.c", [61, 87, 63, 99]]]
           // or 
-          // [([a,b], 4)]
+          // 
           for (var i = 0; i < data.length; ++i) {
             var name = data[i][0]; // TODO:
             var s = findOrAddSeries(this.chart, name);
@@ -121,6 +121,7 @@
                   break;
               }
             }
+            this.chart.redraw();
           }
           
         };

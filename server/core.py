@@ -166,7 +166,7 @@ class Engine(dict):
             except Exception,e:
                 logging.error('insert failed %r key:%s' % (e, k))
 
-        # TODO: only shrink update_keys
+        # only shrink update_keys
         for k in self.update_keys:
             v = self.get(k)
             tree.shrink(v)
