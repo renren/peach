@@ -77,7 +77,7 @@ def stats_filter_sd():
     return dict( (k,v) for k,v in diskstats().iteritems() if k.startswith('sd') )
 
 def metric_read(name):
-    dev, key = name.split(',')
+    dev, key = name.split('.')
     return stats_filter_sd()[dev][key]
 
 def metric_init(params):
@@ -95,7 +95,7 @@ def metric_init(params):
     for dev, d in stats.iteritems():
         for k,v in d.iteritems():
             a = dict(t)
-            a.update({'name': '%s,%s' % (dev, k), 'description':k})
+            a.update({'name': '%s.%s' % (dev, k), 'description':k})
             ret.append(a)
     return ret
 
