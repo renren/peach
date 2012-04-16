@@ -123,6 +123,32 @@ def keyin(pats, d):
                 return False
     return True
 
+def dotexpand(d):
+    """ convert a.b.c => {a: {b: c}}
+    >>> dotexpand({'a.b.c' : 1})
+    {'a': {'b': {'c': 1}}}
+    >>> dotexpand({'a' : 1})
+    {'a': 1}
+    >>> dotexpand({'1.2' : 1})
+    {'1': {'2': 1}}
+    >>> dotexpand({'a.b.c' : {'d.e': 1}})
+    {'a': {'b': {'c': {'d': {'e': 1}}}}}
+    >>> dotexpand({'a.b.c' : {'m': {'d.e': 1}}})
+    {'a': {'b': {'c': {'m': {'d': {'e': 1}}}}}}
+    """
+    if not isinstance(d, dict):
+        return d
+
+    r = {}
+    for k, v in d.iteritems():
+        a = k.split(_SEP)
+        sr = r
+        for i in a[:-1]:
+            sr = sr.setdefault(i, {})
+        sr.setdefault(a[-1], dotexpand(v))
+    return r
+
+
 def _loop_by(d1, d2):
     assert isinstance(d2, dict)
     for k,v2 in d2.iteritems():

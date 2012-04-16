@@ -25,12 +25,11 @@ class GetHandler(RequestHandler):
     #@tornado.web.asynchronous
     def get(self, name):
         name = name.encode('utf8')
-        #name = name.replace('.', ',')
         x = core.engine.query(name)
         if not x:
             raise tornado.web.HTTPError(400)
         a = [i for i in x]
-        print 'query:', a
+        # print 'query:', a
         self.write(tornado.escape.json_encode(a))
 
     def on_connection_close(self):
@@ -54,12 +53,14 @@ class PushHandler(RequestHandler):
         """
         name = name.encode('utf8')
         arr = name.split(',')
+        d = {}
         for a in arr:
             pair = a.split('=')
             if len(pair) != 2:
                 continue
-
-            self._push(pair[0], pair[1])
+            d.setdefault(pair[0], tonumber(pair[1]))
+            #self._push(pair[0], pair[1])
+        core.update(d)
         self.write('')
 
     def post(self, name):
@@ -67,18 +68,3 @@ class PushHandler(RequestHandler):
         pass
         # body => dict
         # self._push(name, self.body)
-
-    def _push(self, key, value):
-        assert isinstance(key, str)
-        assert isinstance(value, str)
-        value = tonumber(value)
-
-        a = key.split('.')
-        d = {}
-        sd = d
-        # print 'make dict from', a[1:len(a)-1]
-        for x in a[1:len(a)-1]:
-            sd = sd.setdefault(x, {})
-        sd.setdefault(a[len(a) - 1], value)
-        print 'push:', a[0], d
-        core.update(a[0], d)

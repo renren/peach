@@ -44,7 +44,7 @@ def run(f):
 
     for p in pipes():
         for k, d in p.result():
-            core.update(k, d)
+            core.update(d, key=k)
             
     logging.debug('pipe process %d line, %d failed', count_line, count_failed)
 

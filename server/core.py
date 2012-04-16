@@ -5,26 +5,38 @@
 >>> waiters.live_signals
 ['a.b']
 
->>> update('a', {'b':1})
-callback p got: {'a.b': 1}
+>>> update({'a': {'b':1}})
+callback p got: [('a.b', 1)]
 
 >>> waiters.disconnect(p)
->>> update('a', {'b':2})
+>>> update({'a': {'b':2}})
 
 >>> engine
 {'a': {'b': [1, 2]}}
 
->>> update('a', {'b': 3})
+>>> update({'a': {'b': 3}})
 >>> engine
 {'a': {'b': [1, 2, 3]}}
 >>> list(engine.query('a.b'))
-[(['a', 'b'], [1, 2, 3])]
+[('a.b', [1, 2, 3])]
 >>> list(engine.query('a'))
-[(['a', 'b'], [1, 2, 3])]
+[('a.b', [1, 2, 3])]
 
->>> update('a', {'b': 4})
+>>> update({'a': {'b': 4}})
 >>> engine
 {'a': {'b': [1, 2, 3, 4]}}
+
+# expand dot => tree
+>>> engine.clear()
+>>> update({'a.b': {'c': 4}})
+>>> engine
+{'a': {'b': {'c': 4}}}
+
+>>> waiters.connect('a.b', p)
+>>> waiters.live_signals
+['a.b']
+>>> update({'a.b': {'c': 4}})
+callback p got: [('a.b.c', 4)]
 """
 
 import collections
@@ -118,31 +130,32 @@ class State(object):
 class Engine(dict):
     """
     >>> e = Engine()
-    >>> e.update('foo', {})
-    >>> e.update('foo', {})
-    >>> e.update('foo', {})
-    >>> e.update('foo', {})
-    >>> e.state('foo').interval > 0
+    >>> e.update('foo', {}) #doctest: +SKIP
+    >>> e.update('foo', {}) #doctest: +SKIP
+    >>> e.update('foo', {}) #doctest: +SKIP
+    >>> e.update('foo', {}) #doctest: +SKIP
+    >>> e.state('foo').interval > 0 #doctest: +SKIP
     True
-    >>> len(e.state_map) == 1
+    >>> len(e.state_map) == 1 #doctest: +SKIP
     True
-    >>> e.update('bar', {})
-    >>> len(e.state_map) == 2
+    >>> e.update('bar', {}) #doctest: +SKIP
+    >>> len(e.state_map) == 2 #doctest: +SKIP
     True
     """
     def __init__(self):
         self.state_map = {} # key => State()
         self.update_keys = set()
 
-    def update(self, k, d):
-        rd = self.setdefault(k, {})
-        tree.merge(rd, d)
+    def update(self, d):
+        assert isinstance(d, dict), type(d)
+        tree.merge(self, d)
 
-        self.update_keys.add(k)
+        for i in d.keys():
+            self.update_keys.add(i)
 
         # TODO: realy need this?
-        s = self.state_map.setdefault(k, State())
-        s.update()
+        # s = self.state_map.setdefault(k, State())
+        # s.update()
 
     def query(self, keys):
         return tree.query(self, keys)
@@ -169,7 +182,8 @@ class Engine(dict):
         # only shrink update_keys
         for k in self.update_keys:
             v = self.get(k)
-            tree.shrink(v)
+            if v:
+                tree.shrink(v)
 
         # TODO: remove tool old keys
         self.clear()
@@ -191,22 +205,25 @@ _last_dump = None
 tick_interval = 60 # 
 _tick_install = False
 
-def update(k, d):
+def update(d, key=None):
     # notify reatime listener(s)
-    assert isinstance(k, str)
-    kd = {k : d}
-    lives = [signal for signal in waiters.live_signals 
-             if tree.keyin(signal, kd)]
-    # print 'candidate keys:', lives, 'lives:', waiters.live_signals
+    if key: assert isinstance(key, str), key
 
-    for key in lives:
-        print 'query', key, 'in', kd
-        assert isinstance(key, str)
-        ret = [x for x in tree.query(kd, key)]
-        waiters.send(key, ret)
+    d = tree.dotexpand(d)
+
+    lives = [signal for signal in waiters.live_signals 
+             if tree.keyin(signal, d)]
+
+    # for signal in waiters.live_signals:
+    #    print 'keyin(', signal, ',', d, ')', tree.keyin(signal, d)
+
+    for signal in lives:
+        ret = [x for x in tree.query(d, signal)]
+        # print 'query ret', ret
+        waiters.send(signal, ret)
 
     # merge
-    engine.update(k, d)
+    engine.update(d)
 
     # need dump tree?
     # TODO: move into Engine?
