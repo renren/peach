@@ -28,7 +28,8 @@ setup(name = 'peachagent',
       	'peach.agent': ['agent/*.py'],
       	'peach.agent.modules': ['agent/modules/*.py']
       },
-      classifiers = classifiers
+      classifiers = classifiers,
+      scripts = ['peach-agent']
      )
 
 

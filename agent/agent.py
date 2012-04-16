@@ -1,13 +1,16 @@
 import os, glob, logging
 import json
+import optparse
 import urllib2, urllib
 
-import modules.ganglia_c_module
-import modules.lazy
+import yaml
 
-@modules.lazy.memoized
+from peach.agent.modules import ganglia_c_module
+from peach.agent.modules import lazy
+
+@lazy.memoized
 def cached():
-    return PythonModule(), modules.ganglia_c_module.GangliaModule()
+    return PythonModule(), ganglia_c_module.GangliaModule()
 
 push_count = 0
 
@@ -17,10 +20,13 @@ def push_once(url):
     tree = mpy.run()
     tree.update(mc.run())
 
+    print tree
+    return
+
     global push_count
     push_count += 1
 
-    s = json.dumps({'127_0_0_1': tree})
+    s = json.dumps({'foo.54': tree})
     s = urllib.urlencode({"json": s})
     f = urllib2.urlopen(url, s)
     f.read()
@@ -30,9 +36,22 @@ class PythonModule():
         self.modules = []
         self.init()
 
+    @staticmethod
+    def modules(path=None):
+        if path is None: path='modules'
+
+        for f in glob.glob('%s/*.py' % path):
+            name,_ =  os.path.splitext(f)
+            arr = name.split('/')
+            if arr[len(arr)-1] == '__init__':
+                continue
+
+            name = name.replace('/', '.')
+            yield name
+
     def init(self, path=None):
-        if path is None:
-            path='modules'
+        if path is None: path='modules'
+
         for f in glob.glob('%s/*.py' % path):
             name,_ =  os.path.splitext(f)
             name = name.replace('/', '.')
@@ -100,6 +119,8 @@ def dump():
     return {'gc': t}
 
 def main():
+    y = yaml.load(open('agent.conf', 'rb'))
+
     import sys
     import time
     if len(sys.argv)>1:
@@ -113,7 +134,13 @@ def main():
         time.sleep(max(1, (1 - time.time() + start)))
 
 if __name__ == '__main__':
-    # --push
-    # --debug -d
+    
+    #print options, args
+
+    if options.list_pymodules:
+        for x in PythonModule.modules():
+            print ' ', x
+
+    exit()
     logging.basicConfig(level=logging.DEBUG)
     main()
