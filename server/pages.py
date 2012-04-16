@@ -29,9 +29,8 @@ def push():
             j = request.form['json'].encode('utf-8')
             d = json.loads(j)
 
-            # TODO: k
-            k = d.keys()[0]
-            core.update(k, d)
+            for key in d.keys():
+                core.update(key, d[key])
 
         elif 'k' in request.form and 'v' in request.form:
             key = request.form['k'].encode('utf-8')
