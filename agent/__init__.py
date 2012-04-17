@@ -58,7 +58,7 @@ class PythonModules():
                 for d in desc:
                     name = d['name']
                     r = d['call_back'](name)
-                    if 'float' == d['value_type']:
+                    if d['value_type'] in ('float', 'double') :
                         tree.setdefault(name, float(d['format'] % r))
                     else:
                         tree.setdefault(name, int(d['format'] % r))
@@ -78,6 +78,7 @@ def main(args):
                       help="config file")
     parser.add_option("-f", "--foreground", dest="daemon", 
                       action='store_false',
+                      default=True,
                       help="run in foregroud(not daemon)")
     parser.add_option("-i", "--interval", dest="interval", 
                       type="int", default=30,
@@ -114,6 +115,7 @@ def main(args):
         name = iface.uniqif()
 
     if options.daemon:
+        from daemon import createDaemon
         createDaemon()
 
     url = options.server

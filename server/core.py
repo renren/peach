@@ -210,6 +210,7 @@ def update(d, key=None):
     if key: assert isinstance(key, str), key
 
     d = tree.dotexpand(d)
+    # d = tree.dotescape(d)
 
     lives = [signal for signal in waiters.live_signals 
              if tree.keyin(signal, d)]

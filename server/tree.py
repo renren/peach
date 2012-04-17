@@ -135,19 +135,79 @@ def dotexpand(d):
     {'a': {'b': {'c': {'d': {'e': 1}}}}}
     >>> dotexpand({'a.b.c' : {'m': {'d.e': 1}}})
     {'a': {'b': {'c': {'m': {'d': {'e': 1}}}}}}
+    >>> dotexpand(1)
+    1
+    >>> dotexpand(1.2)
+    1.2
+    >>> dotexpand({"firefox": {'4.01': 2.0}})
+    {'firefox': {'4': {'01': 2.0}}}
+    >>> dotexpand({"firefox": {'4.01': 2, '4.02': 3}})
+    {'firefox': {'4': {'02': 3, '01': 2}}}
+
+    # failed: 
+    >>> dotexpand({"firefox": {'4': 5, '4.01': 2, '4.02': 3}})
+    {'firefox': {'4': {'02': 3, '01': 2}}}
     """
     if not isinstance(d, dict):
         return d
-
+    
     r = {}
     for k, v in d.iteritems():
         a = k.split(_SEP)
         sr = r
         for i in a[:-1]:
             sr = sr.setdefault(i, {})
+        assert isinstance(sr, dict), '%r: %s %r' % (type(sr), k,sr)
         sr.setdefault(a[-1], dotexpand(v))
     return r
 
+def dotescape(d):
+    """
+    mongodb key should not contain dot, fix:
+
+firefox: {
+  '3.1':  40,
+  '3.5': 100,
+  '5_6': 200,
+}
+
+firefox: {
+  _3_1:  40,
+  _3_5: 100,
+  5_6 : 200,
+}
+
+firefox.3.1 => firefox._3_1
+
+>>> dotescape("a.b")
+'_a_b'
+
+>>> dotescape({"a.b":1})
+{'_a_b': 1}
+
+>>> dotescape({"firefox": {'4': 5, '4.01': 2, '4.02': 3}})
+{'firefox': {'_4_01': 2, '_4_02': 3, '4': 5}}
+
+>>> dotescape({"a.b": {'c.d': {'f.g': 3}}})
+{'_a_b': {'_c_d': {'_f_g': 3}}}
+
+"""
+    if isinstance(d, str):
+        if _SEP in d:
+            return '_' + d.replace('.', '_', -1)
+        else:
+            return d
+    elif isinstance(d, dict):
+        # TODO: more efficiency implement
+        r = {}
+        for k, v in d.iteritems():
+            if _SEP in k:
+                r.setdefault(dotescape(k), dotescape(v))
+            else:
+                r.setdefault(k, dotescape(v))
+        return r
+    else:
+        return d
 
 def _loop_by(d1, d2):
     assert isinstance(d2, dict)

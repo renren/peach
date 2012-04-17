@@ -189,14 +189,14 @@ class mmodule(ctypes.Structure):
         return i
 
     def run(self, index):
-        #if not hasattr(self, '_ml'):
-        #    setattr(self, '_ml', self.build_metric_list())
-
-        info, handler = self.metric(index)
-        r = handler(index)
-        #return info.name, info.fmt % r.raw(info.type)
+        try:
+            info, handler = self.metric(index)
+            r = handler(index)
+            #return info.name, info.fmt % r.raw(info.type)
         
-        return info.name,  r.raw(info.type, info.fmt)
+            return info.name,  r.raw(info.type, info.fmt)
+        except:
+            pass
 
 @memoized
 def global_pool():
