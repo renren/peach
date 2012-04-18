@@ -12,12 +12,17 @@ class TreeHandler(RequestHandler):
     def get(self, name):
         name = name.encode('utf8')
         if name:
-            d = core.engine.get(name)
+            keys = set()
+            for k,v in core.engine.query(name):
+                s = k[1+len(name) : k.find('.', 1+len(name))]
+                keys.add(s)
+            keys = list(keys)
         else:
-            d = core.engine
-        if d:
+            keys = core.engine.keys()
+
+        if keys:
             # TODO: sort keys
-            self.write(tornado.escape.json_encode(d.keys()))
+            self.write(tornado.escape.json_encode(keys))
         self.write('')
 
 class GetHandler(RequestHandler):

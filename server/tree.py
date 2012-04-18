@@ -234,7 +234,7 @@ def merge(d, *args, **kwargs):
             v1 = d1[key]
             if not isinstance(v1, list):
                 v1 = [v1]
-            assert isinstance(v2, (int, float)), (key,v2,d2)
+            assert isinstance(v2, (int, float, long)), (key,v2,d2)
             v1.append(v2)
             d1[key] = v1
         else:
@@ -270,8 +270,8 @@ def add(d, *args, **kwargs):
     for keyin, d1,d2,key,v2 in _loop_by(d, kwargs):
         if keyin:
             v1 = d1[key]
-            assert isinstance(v2, (int, float)), (key,v2)
-            assert isinstance(v1, (int, float)), (key,v1)
+            assert isinstance(v2, (int, float, long)), (key,v2)
+            assert isinstance(v1, (int, float, long)), (key,v1)
             v1 += v2
             d1[key] = v1
         else:

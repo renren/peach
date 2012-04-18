@@ -72,6 +72,7 @@ def get(key):
 
 @app.route('/realtime/<key>', methods=['GET'])
 def realtime_view(key):
+    key = key.encode('utf8')
     d = getmatch(key)
     type = request.args.get('type', 'spline')
     return render_template('realtime_view.html', key=key, series=d, type=type, now=int(1000*time.time()))
