@@ -1,4 +1,4 @@
-<!DOCTYPE HTML>
+﻿<!DOCTYPE HTML>
 <html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -9,45 +9,78 @@
   <script type="text/javascript" src="{{static_url('jquery-1.6.2.js')}}"></script>
   <script type="text/javascript" src="{{static_url('highcharts.src.js')}}"></script>
   <script type="text/javascript">
-    function treeClick() {
-      
+    function leafClick(e) {
+      var a = $(this);
+
+      console.log(e, this);
+      if (a.parent().children('ul').length) {
+        // add/remove class
+        console.log('TODO: expand', a.attr('id'));
+
+        addToRealview(a.attr('id'));
+        return;
+      }
+
+      $.getJSON('/tree/' + this.id, function (data) {
+            leafLoaded(a.parent(), data);
+          });
     }
+    function leafLoaded(c, data) {
+      console.log('leaf', c, data);
+      var ul = $('<ul />');
+      c.append(ul);
+      
+      if (!data) return; // TODO: use attr
+
+      var parent_id = '';
+      if (c.children('a').length > 0)
+        parent_id = c.children('a')[0].id + '.';
+        
+      $.each(data, function (k, v) {
+        var a = jQuery('<a />', {
+          text: v,
+          href: '#',
+          class: 'leaf colsp',
+          click: leafClick,
+          id: parent_id + v,
+        });
+        
+        // a.click = leafClick;
+
+        var li = $('<li />');
+        li.append(a);
+
+        ul.append(li);
+      });
+    }
+    function addToRealview(key) {}
     function addTrendView(key, period) {}
     function init() {
       var key = location.hash.substr(1);
       $.getJSON('/tree/' + key, function (data) {
-        // 
-        $.each(data, function (k, v) {
-          var a = document.createElement('a');
-          $(a).click = treeClick;
-          $('#tree ul').append('<li><a href="#" onclick="treeClick">' + v + '</a></li>');
-        });
+            leafLoaded($('#tree'), data);
+          });
 
-        // 
-        if (data && data.length) {
-          var key = data[0]; // TODO: encoding
-          console.log('iframe', 'src', '/realtime/' + key);
-          $('iframe#rv').attr('src', '/realtime/a')
-          addTrendView(key, '5min');
-          addTrendView(key, '1hr');
-          addTrendView(key, '1mon');
-          addTrendView(key, '1y');
-        }
-      });
+      var data = null;
+      if (data && data.length) {
+        var key = data[0]; // TODO: encoding
+        console.log('iframe', 'src', '/real/' + key);
+        $('iframe#rv').attr('src', '/real/a')
+        addTrendView(key, '5min');
+        addTrendView(key, '1hr');
+        addTrendView(key, '1mon');
+        addTrendView(key, '1y');
+      }
     }
     $(document).ready(init);
     </script>
 </head>
 <body>
-  <div id="tree">
-  <ul></ul>
-  </div>
-  <div id="favlist">
-  </div>
+  <div id="tree"></div>
+  <div id="favlist"></div>
   <div id="right">
-  <iframe id="rv" width="600" height="400"></iframe>
+    <iframe id="rv" width="600" height="400"></iframe>
   </div>
-  <div id="tv">
-  </div>
+  <div id="tv"></div>
 </body>
 </html>

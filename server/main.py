@@ -56,7 +56,7 @@ class PullHandler(RequestHandler):
         self.finish()
 
 class RealtimeViewHandler(RequestHandler):
-    FILTER = r'/realtime/([^/]+)'
+    FILTER = r'/real/([^/]+)'
     def get(self, name):
         name = name.encode('utf8')
         self.render('realtime.html', key=name)
